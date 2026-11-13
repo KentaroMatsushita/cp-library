@@ -1,0 +1,45 @@
+<h2>凸多角形の O(log N) クエリ</h2>
+<p><code>ConvexPolygon(points)</code> は点集合から凸包を作り、辺の偏角順インデックスを準備します。前処理は O(N log N)、保持する頂点数を H とするとメモリは O(H) です。返される凸包は反時計回りで、連続する3頂点は一直線上にありません。</p>
+<table><thead><tr><th>API</th><th>戻り値</th><th>計算量</th></tr></thead><tbody>
+<tr><td>contains(p)</td><td>OUT=0 / ON=1 / IN=2</td><td>O(log H)</td></tr>
+<tr><td>support(direction)</td><td>内積が最大になる頂点の添字</td><td>O(log H)</td></tr>
+<tr><td>line_intersections(line)</td><td>直線に沿った順に境界との交点0〜2個</td><td>O(log H)</td></tr>
+<tr><td>vertices()</td><td>凸包頂点配列への const 参照</td><td>O(1)</td></tr>
+</tbody></table>
+<p>内外判定は先頭頂点からの扇形を二分探索し、最後に三角形の外側の辺で判定します。<code>support</code> は方向と直交する辺の偏角を二分探索します。直線交点は法線方向の最大・最小頂点を求め、その間の2本の単調な鎖をそれぞれ二分探索します。クエリ内で全頂点を走査したり、凸包を再構築したりしません。</p>
+<p>直線が辺に重なるとその辺の両端、頂点で接すると1点です。空集合・1点・線分に退化した凸包にも対応します。空集合での support は例外、方向ゼロは任意の頂点を返します。Line は異なる2点が必要です。</p>
+<h2>半平面交差</h2>
+<p>有向直線 a→b の<strong>左側（境界を含む）</strong>を残します。不等式 Ax+By≥C は、直線上の点 a と方向 (B,-A) から作れます。例えば x≥2 は a=(2,0), b=(2,-1) です。</p>
+<pre><code>std::vector&lt;Line&gt; constraints{
+    Line({0,0},{1,0}),  // y &gt;= 0
+    Line({0,0},{0,-1})  // x &gt;= 0
+};
+auto region = half_plane_intersection(constraints);
+// region.kind == RegionKind::UNBOUNDED
+
+auto polygon = half_plane_intersection(constraints, Point{-10,-10}, Point{10,10});
+// [0,10] × [0,10] の頂点列</code></pre>
+<table><thead><tr><th>kind</th><th>意味</th><th>結果</th></tr></thead><tbody>
+<tr><td>EMPTY</td><td>実行可能点なし</td><td>polygon は空</td></tr>
+<tr><td>UNBOUNDED</td><td>非有界（直線や半直線も含む）</td><td>witness に実行可能点</td></tr>
+<tr><td>POLYGON</td><td>有界で正の面積を持つ</td><td>polygon に反時計回り頂点列、witness に実行可能点</td></tr>
+<tr><td>DEGENERATE</td><td>有界な1点または線分</td><td>witness のみ。線分の両端は返さない</td></tr>
+</tbody></table>
+<p>一般版は、ランダム順の制約に対して原点に最も近い実行可能点を更新します。違反した制約の境界上で、以前の制約を1次元の区間に変換します。実行可能なら辺方向の最大角度差から非有界性を判定し、有界の場合は偏角ソートと deque で境界を作ります。全体は期待 O(N log N)、最悪 O(N²)。乱数シードは再現可能な固定値なので、入力に対する最悪計算量保証ではありません。</p>
+<p>矩形付きの版は矩形も制約に加え、ソートと deque のみを使うため O(N log N) です。交差が空・点・線分の場合はいずれも空の頂点列を返します。矩形外の領域は切り捨てられます。無限領域を大きな定数で置き換える仕様ではありません。</p>
+<h2>その他の幾何</h2>
+<table><thead><tr><th>API</th><th>用途・前提</th><th>計算量</th></tr></thead><tbody>
+<tr><td>convex_hull(points)</td><td>重複と辺上の中間点を除く凸包</td><td>O(N log N)</td></tr>
+<tr><td>contains(polygon,p)</td><td>一般の単純多角形の内外判定。自己交差多角形は対象外</td><td>O(N)</td></tr>
+<tr><td>convex_diameter2(hull)</td><td>厳密凸包の最遠点対距離の二乗。反時計回りが必要</td><td>O(N)</td></tr>
+<tr><td>convex_cut(polygon,line)</td><td>凸多角形を直線の左側で切る</td><td>O(N)</td></tr>
+<tr><td>segments_intersect(a,b,c,d)</td><td>線分交差。端点接触、重なり、長さ0を含む</td><td>O(1)</td></tr>
+<tr><td>segment_distance(a,b,p)</td><td>点と線分の距離。長さ0にも対応</td><td>O(1)</td></tr>
+<tr><td>projection(line,p)</td><td>直線上への射影</td><td>O(1)</td></tr>
+<tr><td>line_intersection(l,m)</td><td>非平行直線の交点。平行なら例外</td><td>O(1)</td></tr>
+<tr><td>area2(polygon)</td><td>符号付き面積の2倍。反時計回りで正</td><td>O(N)</td></tr>
+</tbody></table>
+<h2>精度と退化の扱い</h2>
+<p>座標・内積・外積に long double を使い、ゼロ判定は絶対誤差 1e-12 です。辞書順・偏角ソートには epsilon 比較を使いません（推移律が壊れるため）。ほぼ重なる点や直線はゼロ判定で同一視される場合があります。整数の厳密判定、極端なスケール、NaN/無限大の入力はこの実装の保証対象外です。交点が有限でもほぼ平行な直線では誤差が増幅されます。</p>
+<h2>検証</h2>
+<p>固定シードのランダム点集合について、凸内外判定は一般多角形 O(N) 判定、support は全頂点走査、直線交点は全辺走査、直径は全点対と比較します。半平面交差は逐次凸切断の面積と比較し、実行可能点・返却頂点が各制約を満たすことも調べます。加えて辺との重なり、接点、平行・逆向き・重複した半平面、点・線分への退化、空集合・非有界領域を確認します。外部ジャッジでの AC を示すものではありません。</p>

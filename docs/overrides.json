@@ -1,0 +1,10 @@
+{
+ "graph/get_cycle.cpp":{"title":"有向・無向グラフの閉路検出","contract":"DirectedCycle と UndirectedCycle を別名に整理。互換名 GetCycle は有向版です。build() は閉路の頂点列、なければ空。始点を末尾へ重ねません。再build、自己ループ、無向の平行辺を処理します。Graph、repに依存。再帰深さに注意。","usage":"DirectedCycle directed(g); auto cycle=directed.build();\nUndirectedCycle undirected(g); auto another=undirected.build();"},
+ "math/prime_sieve.cpp":{"contract":"Nは非負のint、通常 N≤INT_MAX-30。Q,Lは正で、前処理積がintに収まる設定を使うこと。既定値を推奨。配列外への基準ポインタ移動と推定個数の固定確保を除去し、vectorへの追加へ変更。prime_table(N)は素数の添字が1の配列。"},
+ "graph/SectionGraph.cpp":{"contract":"add_edge(l,r,L,R,w)は[l,r)から[L,R)への重みwの辺。空区間は無操作。元頂点iはg[sz+i]。補助頂点の前後で重みを二重加算する問題を修正。Dijkstraで使うならwは非負。WeightedGraph、Edges、rep2（閉区間）、ebに依存。"},
+ "linear_algebra/linear_equation.cpp":{"contract":"Tは除算できる体。整数の切捨て除算は不可。浮動小数点は厳密0判定とピボット戦略のため安定性未保証。LinearEquationは解なしなら空、先頭が特解、以後が同次解の基底。行数0は変数数0の空解1個を返します。"},
+ "data_structure/dynamic_li_chao_tree.cpp":{"contract":"整数型T、定数x_low≤x_highの閉区間。add_segment(l,r,a,b)は[l,r)。空区間は無操作。ax+bと区間中点計算がT内に収まること。空のqueryはid。clear/デストラクタでノードを解放し、所有権の二重解放を避けるためコピーを禁止。"},
+ "data_structure/rollinghash.cpp":{"contract":"2^61-1、固定base5454547の確率的比較。getは[l,r)。calc_powで必要な長さの共有冪列を準備してからget_hashを使うこと。等値・不等値演算の戻り値をboolへ修正。si、eb、i128、ullに依存。他のRollingHashes定義と同時include不可。"},
+ "math/power_sum.cpp":{"contract":"mint、vmint、fact/ifact、power_table、FPS inv/log/exp/シフト/畳み込みが必要。kpowsumの対象は1..k-1。sum_evalは0..n-1を含める定数項を修正。kx_prodは空積を1、先頭係数のべき乗方向を修正しdebug出力を除去。負の区間・次数は対象外。"},
+ "graph/bi-connected-components.cpp":{"contract":"単純無向グラフ限定。bcは成分ごとの辺の頂点対。孤立頂点は辺集合に現れません。buildは結果を初期化して繰返し実行できます。平行辺には未対応。LowLink.cppと同名定義なので同時include不可。"}
+}

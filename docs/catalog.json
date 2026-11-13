@@ -1,0 +1,227 @@
+{
+  "geometry/geometry.hpp": {
+    "title": "平面幾何・凸多角形クエリ・半平面交差",
+    "summary": "long double の点・直線を使う独立した幾何ライブラリ。凸包の前処理後、内外判定、指定方向の最遠点、直線と凸多角形の境界の交点を二分探索で求める。",
+    "complexity": "凸包・前処理 O(N log N)、内外判定・support・直線交点 O(log N)、直径・凸切断 O(N)、矩形内半平面交差 O(N log N)。一般半平面交差は期待 O(N log N)、最悪 O(N²)。",
+    "contract": "namespace cp_geometry。Point の座標は long double。eps=1e-12 は絶対誤差。ConvexPolygon は任意の点集合を受け取り、重複点と辺上の中間点を除去した反時計回り凸包を保持する。巨大座標・極小距離・ほぼ平行な直線ではスケール調整が必要。厳密整数幾何ではない。",
+    "usage": "#include \"geometry/geometry.hpp\"\nusing namespace cp_geometry;\nConvexPolygon p({{0,0},{4,0},{4,3},{0,3}});\nauto where = p.contains({1,1}); // IN\nauto hit = p.line_intersections(Line({-1,1},{5,1})); // (0,1),(4,1)\nauto d2 = convex_diameter2(p.vertices()); // 25",
+    "detail": "geometry.html",
+    "tests": ["verify/geometry.test.cpp"]
+  },
+  "data_structure/UnionFind.cpp": {
+    "title": "Union-Find・成分の値の集約",
+    "summary": "負のサイズを根に格納し、サイズ併合と経路圧縮で連結成分を管理する。UnionFind_value は併合時に根の値をコールバックで更新する。",
+    "complexity": "unite/find/same/size は償却 O(α(N))、メモリ O(N)。",
+    "contract": "頂点は [0,N)。num は現在の成分数。belong() は N 個の配列を返し、根でない添字は空。UnionFind_value の f(T&,T) は第1引数を更新する。reset で全成分を分離する。",
+    "usage": "UnionFind uf(5);\nuf.unite(0,3);\nassert(uf.same(0,3) && uf.size(0)==2 && uf.num==4);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "data_structure/UnionFind.hpp": {
+    "title": "Union-Find（テンプレート依存版）",
+    "summary": "UnionFind.cpp の基本版と同じサイズ併合・経路圧縮。belong() が vi、rep、eb など競プロ用テンプレートに依存する。",
+    "complexity": "償却 O(α(N))、メモリ O(N)。",
+    "contract": "UnionFind.cpp と同じクラス名なので同時 include しない。依存の少ない UnionFind.cpp を推奨。",
+    "usage": "// my_template.hpp を先に読み込み、UnionFind.cpp とはどちらか片方を使う。\nUnionFind uf(5); uf.unite(0,1);",
+    "tests": []
+  },
+  "data_structure/UnionFind_weighted.cpp": {
+    "title": "値を集約する Union-Find",
+    "summary": "各根に T の値を保持し、unite で f(data[root],data[child]) を呼ぶ。ファイル名に weighted とあるが、頂点間ポテンシャル差を管理する実装ではない。",
+    "complexity": "償却 O(α(N)) ＋コールバックの計算量。",
+    "contract": "f は第1引数を参照で更新する。get(x) は所属成分の値への参照。基本版とクラス名が衝突するため一緒に読み込まない。",
+    "usage": "auto f=[](int& a,int b){a+=b;};\nUnionFind<int,decltype(f)> uf(4,f,1);\nuf.unite(0,1); // size(0)==2, get(0)==2",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "data_structure/UnionFind_potential.cpp": {
+    "title": "ポテンシャル付き Union-Find",
+    "summary": "可換群の差分を辺に保持する。merge(x,y,w) で potential(y)-potential(x)=w を課す。経路圧縮時に差分も合成する。",
+    "complexity": "償却 O(α(N)) ＋群演算の計算量。",
+    "contract": "デフォルトは加法群。val(x,y) は potential(x)-potential(y) で merge の w と符号が逆。非連結なら -1。既に同じ成分の merge は false を返し、制約の矛盾検出は行わない。独自群は init(n,e,plus,inv) で二項の合成・差を渡す。rep マクロが必要。",
+    "usage": "UnionFind<long long> uf(3);\nuf.merge(0,1,7);\nassert(uf.val(0,1)==-7);",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "data_structure/UnionFind_rollback.cpp": {
+    "title": "ロールバック Union-Find",
+    "summary": "経路圧縮を使わず、併合で書き換えた親・サイズ・成分の最大値をスタックに記録して取り消す。",
+    "complexity": "find/unite O(log N)、rollback(k) O(k)。",
+    "contract": "失敗した unite も履歴1件として数える。rollback(k) は直近 k 回の unite を取り消す。履歴件数を超えないこと。a は成分の最大値。vi、si、chmax の定義が必要。",
+    "usage": "UnionFind_undo uf(3);\nuf.unite(0,1); uf.rollback();\nassert(!uf.same(0,1) && uf.num==3);",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "data_structure/BIT.cpp": {
+    "title": "Fenwick Tree / Binary Indexed Tree",
+    "summary": "配列の1点加算と prefix sum を、最下位ビットで区切った区間の和で管理する。",
+    "complexity": "構築 O(N)、add/sum O(log N)、メモリ O(N)。",
+    "contract": "add(k,x) は0始まり。sum(k) は [0,k] の閉区間和で、sum(-1)=0。[l,r) の和は sum(r-1)-sum(l-1)。add(-1,...) は不可。",
+    "usage": "BinaryIndexedTree<long long> bit(5);\nbit.add(2,7);\nassert(bit.sum(3)-bit.sum(0)==7);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "data_structure/SparseTable.cpp": {
+    "title": "Sparse Table",
+    "summary": "長さが2冪の区間を前計算し、重なりを許して2区間を合成する静的 RMQ。",
+    "complexity": "前処理・メモリ O(N log N)、query O(1)。",
+    "contract": "query(l,r) は [l,r)。f は結合則と冪等性を満たすこと（min/max/gcd 等）。和には使えない。空区間は unit。更新不可。std::function を使用。",
+    "usage": "SparseTable<int> st({3,1,4},[](int a,int b){return min(a,b);},INT_MAX);\nassert(st.query(0,2)==1);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "data_structure/SegmentTree.cpp": {
+    "title": "Segment Tree（モノイド・境界探索）",
+    "summary": "二分木に区間の積を格納し、1点更新・区間積・単調述語による max_right/min_left を提供する。RST は和、RmT は最小、RMT は最大。",
+    "complexity": "構築 O(N)、set/prod/max_right/min_left O(log N)、get/all_prod O(1)。",
+    "contract": "prod(l,r) は [l,r)。op は結合則、e は単位元。境界探索の述語 f は f(e())=true かつ区間拡張に対して単調。既存コードの ONLINE_JUDGE 時は範囲外の端を補正する挙動があるため、呼出し側で有効な範囲を渡す。今回のランダムテストは RST の範囲和を対象。",
+    "usage": "RST<long long> seg(vector<long long>{1,2,3});\nseg.set(1,7);\nassert(seg.prod(0,3)==11);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "data_structure/2D_cum_sum.cpp": {
+    "title": "2次元累積和",
+    "summary": "点への加算を格子に蓄え、build で2次元の prefix sum に変換する。",
+    "complexity": "build O(WH)、query O(1)、メモリ O(WH)。",
+    "contract": "CumSum(W,H)。query(sx,sy,gx,gy) は [sx,gx)×[sy,gy)。全 add のあと build を1回だけ呼ぶ。build 後の add・再 build には対応していない。",
+    "usage": "CumSum<int> a(4,3); a.add(1,2,7); a.build();\nassert(a.query(0,0,4,3)==7);",
+    "tests": []
+  },
+  "data_structure/SWAG.cpp": {
+    "title": "Sliding Window Aggregation",
+    "summary": "左右2本のスタックに逆向きの集約値を保持し、キューの全要素の積を求める。非可換な演算にも対応する。",
+    "complexity": "push/pop は償却 O(1)、fold_all O(1)、メモリ O(N)。",
+    "contract": "Op は結合則を満たすこと。単位元を受け取らないため、空キューで fold_all/pop を呼ばない。演算順序は先頭から末尾。",
+    "usage": "auto q=get_SWAG<string>([](const string& a,const string& b){return a+b;});\nq.push(\"a\"); q.push(\"b\"); // fold_all()==\"ab\"",
+    "tests": []
+  },
+  "dp/lis.cpp": {
+    "title": "最長増加部分列と復元",
+    "summary": "長さごとの末尾最小値に二分探索を行う。lis_restore は先行インデックスを保存して最長部分列の元配列の添字を返す。",
+    "complexity": "O(N log N)、メモリ O(N)。",
+    "contract": "strict=true は狭義増加、false は広義増加。復元結果は値でなく0始まりの添字列。空配列は長さ0・空の添字列。",
+    "usage": "vector<int> a{3,1,2,2};\nassert(lis(a)==2 && lis(a,false)==3);\nauto indices=lis_restore(a,false);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "dp/monotone-minima.hpp": {
+    "title": "Monotone Minima",
+    "summary": "行の最小値を取る列が単調非減少である行列に対し、中央行の最適列で候補範囲を分ける分割統治。",
+    "complexity": "O(H+W log H) 回の比較（H,W>0）、メモリ O(H+log H)。",
+    "contract": "f(i,j,k) は列 k が列 j 以上に良いとき true。列の範囲は [0,W)。同値は右を選ぶ比較を推奨。空の行列では H 個の -1 を返す。",
+    "usage": "auto arg=monotone_minima(5,5,[](int i,int j,int k){return (i-j)*(i-j)>=(i-k)*(i-k);});",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "dp/convex-convolution.hpp": {
+    "title": "片側凸 min-plus / max-plus 畳み込み",
+    "summary": "c[k]=min/max(a[i]+b[k-i]) を、凸性から得られる最適列の単調性を使って高速化する。",
+    "complexity": "N=|a|+|b| として O(N log N)、メモリ O(N)。",
+    "contract": "min 版は a の隣接差が単調非減少（下凸）、max 版は単調非増加（上凸）。b は任意。入力のどちらかが空なら空。monotone-minima.hpp を自動 include。rep マクロが必要。",
+    "usage": "vector<int> a{0,1,4},b{2,-1};\nauto c=convex_min_conv(a,b); // {2,-1,0,3}",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "Strings/z_algorithm.cpp": {
+    "title": "Z-algorithm",
+    "summary": "各位置からの接尾辞と元の列の最長共通接頭辞長を線形時間で列挙する。文字列版と vector 版を提供する。",
+    "complexity": "O(N)、メモリ O(N)。",
+    "contract": "結果 z[i]=LCP(s,s[i:])、非空なら z[0]=N。空入力は空。入力は非 const 参照だが変更しない。",
+    "usage": "string s=\"ababa\";\nassert(z_algorithm(s)==vector<int>({5,0,3,0,1}));",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "Strings/LCS.cpp": {
+    "title": "最長共通部分列",
+    "summary": "接頭辞の組に対する DP で最長共通部分列の長さを求める。文字が一致しない箇所でも左・上の最適値を引き継ぐ。",
+    "complexity": "時間・メモリ O(|s||t|)。",
+    "contract": "連続部分文字列ではなく、飛び飛びでもよい部分列の長さ。部分列そのものは復元しない。",
+    "usage": "assert(LCS(\"axb\",\"ayb\")==2);",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "Strings/Trie.cpp": {
+    "title": "小文字 Trie",
+    "summary": "a〜z の各文字を辺とする接頭辞木を構築する。ノードに親・文字・26通りの遷移を保持する。",
+    "complexity": "add O(|s|)、メモリ O(26×ノード数)。",
+    "contract": "終端フラグ・単語数・検索 API はないため、完全一致辞書として使う場合は拡張が必要。小文字以外の入力不可。再帰の深さは文字列長。",
+    "usage": "Trie trie; trie.add(\"abc\"); trie.add(\"abd\");\n// 共通接頭辞 ab のノードが共有される。",
+    "tests": []
+  },
+  "graph/template.cpp": {
+    "title": "重み付き・重みなしグラフの型と入力",
+    "summary": "行先の int 変換を持つ edge<T> と隣接リスト型を定義する。make/make2 は入力から無向グラフを作る。",
+    "complexity": "構築 O(N+M)、メモリ O(N+M)。",
+    "contract": "make(n,m,offset=1)、make2<T>(n,m,offset=1)。頂点番号から offset を引く。有向辺の入力にはそのまま使わない。既存の Graph/Wgraph という別名は必要に応じて呼出し側で定義。",
+    "usage": "using Graph=UnWeightedGraph;\ntemplate<class T> using Wgraph=WeightedGraph<T>;\n// auto g=make2<long long>(n,m);",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "graph/scc.cpp": {
+    "title": "強連結成分分解",
+    "summary": "元グラフと逆グラフで2回 DFS する Kosaraju 法。成分番号、縮約 DAG、各成分の頂点を取得できる。",
+    "complexity": "build O(N+M)、メモリ O(N+M)。getGraph は隣接辺の重複除去ソートを含む。",
+    "contract": "SCC(n) は add 後に build が必要。グラフを渡すコンストラクタは即 build。add 後の再 build に対応。成分番号は縮約 DAG のトポロジカル順。再帰 DFS のスタック量に注意。Graph、rep、all、UNIQUE に依存。",
+    "usage": "SCC<> scc(3); scc.add(0,1); scc.add(1,0); scc.build();\nassert(scc[0]==scc[1]);",
+    "tests": ["verify/core.test.cpp", "verify/reviewed.test.cpp"]
+  },
+  "graph/2-SAT.cpp": {
+    "title": "2-SAT",
+    "summary": "論理変数と否定を頂点にした含意グラフを SCC で分解し、2-CNF の充足可能性と割当てを求める。",
+    "complexity": "変数 N、節 M に対して O(N+M)。",
+    "contract": "OR(x,y) のリテラルは ±1..±N（0不可）。IF(x,y) は内部の0始まり頂点番号を受けるので OR と規約が違う。solve は0/1割当て、充足不能なら空。N=0 の空割当てとの区別は can() を使う。solve/can は複数回実行可。",
+    "usage": "TwoSat sat(2); sat.OR(1,2); sat.OR(-1,2);\nassert(sat.can()); auto answer=sat.solve();",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "graph/topological_sort.cpp": {
+    "title": "トポロジカルソート",
+    "summary": "入次数0の頂点をスタックから取り出す Kahn 法。取り出した頂点から出る辺の入次数を減らす。",
+    "complexity": "O(N+M)、メモリ O(N)。",
+    "contract": "有向グラフ。閉路がある場合は全頂点より短い列を返すため、戻り値の size と N を比較する。辞書順最小の順序ではない。",
+    "usage": "auto order=topological_sort(g);\nbool is_dag=order.size()==g.size();",
+    "tests": ["verify/core.test.cpp"]
+  },
+  "graph/LowLink.cpp": {
+    "title": "LowLink・関節点・橋",
+    "summary": "DFS の到着順 ord と後退辺で到達できる最小順 low から、関節点と橋を列挙する。親への辺を1本だけ無視するため平行辺にも対応する。",
+    "complexity": "O(N+M)、メモリ O(N+M)。",
+    "contract": "無向グラフ。構築後 build() を呼ぶ。bridge は頂点対。再 build で結果を初期化する。自己ループを橋としない。Graph と pii の定義が必要。深い DFS ではスタックに注意。",
+    "usage": "LowLink low(g); low.build();\nauto bridges=low.bridge; auto cut_vertices=low.articulation;",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "graph/two-edge-connected-components.cpp": {
+    "title": "二重辺連結成分分解",
+    "summary": "LowLink で求めた橋を除去して連結成分に分け、各成分を頂点とする橋の森を作る。",
+    "complexity": "O(N+M)、メモリ O(N+M)。",
+    "contract": "コンストラクタで build。comp[v] と operator[] は成分番号、group は所属頂点、tree は成分を結ぶ森。再 build 可能。LowLink.cpp を自動 include。",
+    "usage": "TwoEdgeConnectedComponents c(g);\nauto id=c[0]; auto forest=c.tree;",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "graph/dijkstra_restore.cpp": {
+    "title": "Dijkstra 法・最短路復元",
+    "summary": "優先度付きキューで非負重み最短路を求め、先行頂点を辿って頂点列を復元する。",
+    "complexity": "O((N+M) log(N+M))、メモリ O(N+M)。",
+    "contract": "Wgraph<T>、all マクロが必要。重みは非負、有限距離と辺重みの加算が T の範囲内であること。到達不能なら {空,-1}、s=t なら {{s},0}。今回の回帰テストは s=t を対象。",
+    "usage": "auto [path,distance]=dijkstra(g,s,t);",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "tree/center.cpp": {
+    "title": "木の中心",
+    "summary": "2回の BFS で直径の端点と経路を求め、その中央の1頂点または2頂点を返す。再帰を使わない。",
+    "complexity": "O(N)、メモリ O(N)。",
+    "contract": "連結な重みなし木を渡す。森・一般グラフは対象外。空なら空、1頂点なら {0}。中心が2個のときの返却順は未規定。",
+    "usage": "auto centers=search_center(g);",
+    "tests": ["verify/reviewed.test.cpp"]
+  },
+  "tree/diameter_UnWeighted.cpp": {
+    "title": "重みなし木の直径と経路",
+    "summary": "2回の DFS で最遠点を求め、to 配列から直径経路を復元する。",
+    "complexity": "O(N)、メモリ・再帰スタック O(N)。",
+    "contract": "連結な重みなし木。build() は辺数としての直径長を返し、path に頂点列を保存。複数回 build 可能。空の木は長さ0・空の path。Graph 型が必要。",
+    "usage": "Diameter d(g); int length=d.build(); auto path=d.path;",
+    "tests": ["verify/core.test.cpp"]
+  },
+  ".vscode/geometry/Points.cpp": {
+    "title": "旧版・整数点の偏角ソート",
+    "summary": "テンプレートの2次元点に加減算・スカラー倍・偏角比較を提供する。原点は全ての非原点より前、同じ方向のベクトルは同値とする。",
+    "complexity": "比較・演算 O(1)、sort O(N log N)。",
+    "contract": "ll、vector、cout、endl に依存。外積の積が座標型に収まること。原点同士の比較が常に true だった不具合を修正。新しい幾何 API は geometry/geometry.hpp を推奨。",
+    "usage": "Points<long long> p{{1,0},{0,0},{0,1}};\nsort(p.begin(),p.end());",
+    "tests": ["verify/legacy_geometry.test.cpp"]
+  },
+  ".vscode/geometry/geometry.hpp": {
+    "title": "旧版・整数幾何（移行用）",
+    "summary": "整数点、線分交差、凸包、一般多角形の内外判定を含む従来の実装。スカラー倍が左辺を書き換える不具合を修正。",
+    "complexity": "凸包 O(N log N)、contains O(N)、基本演算 O(1)。",
+    "contract": "座標型 T=ll。projection・crosspoint・係数からの Line 構築では整数除算による切捨てが発生するため、一般の交点計算には使用しないこと。外積のオーバーフローにも注意。新規利用は geometry/geometry.hpp を推奨。今回のテストはスカラー倍の非破壊性のみ。",
+    "usage": "// 非整数の交点が必要なら cp_geometry::Line と line_intersection を使う。",
+    "tests": ["verify/legacy_geometry.test.cpp"]
+  }
+}

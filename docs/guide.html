@@ -1,0 +1,25 @@
+<h2>このサイトについて</h2>
+<p>競技プログラミング用コードをカテゴリ別に掲載します。「説明あり」はコードを読んで仕様・計算量・注意点を整理したもの、「テスト対象・成功」は現在のコードと一致するオフライン検証の結果があるものです。「未レビュー」は既存ファイルの目録であり、説明・レビュー・動作保証は未完了です。</p>
+<p>ライブラリの全 API を検証しているわけではありません。各ページとテスト実装で対象を確認してください。外部ジャッジでの AC バッジは付けていません。</p>
+<h2>C++ での使用方法</h2>
+<p>新しい幾何コードは C++17 以上で単独 include できます。既存の .cpp は提出用スニペットで、標準ヘッダ、using namespace std、Graph や ll などの型、rep/all などのマクロを呼出し側で用意する実装が多くあります。同名クラス・同名関数の別実装を同時に include しないでください。C++20 の auto 引数を使う既存ファイルもあります。</p>
+<pre><code>#include "geometry/geometry.hpp"
+int main() {
+    cp_geometry::ConvexPolygon p({{0,0},{2,0},{2,2},{0,2}});
+    return p.contains({1,1}) == cp_geometry::IN ? 0 : 1;
+}</code></pre>
+<p>コンパイル例：<code>g++ -std=c++17 -O2 -iquote /path/to/cp_library main.cpp</code>。元フォルダには <code>vector</code> という作業ファイルがあるため、標準ヘッダ探索にも影響する <code>-I</code> の代わりに <code>-iquote</code> を使います。</p>
+<h2>ローカル検証</h2>
+<pre><code>python3 tools/test.py --sanitize
+python3 tools/build_docs.py
+python3 tools/check_docs.py
+python3 -m http.server 8000 --directory _site</code></pre>
+<p>必要なのは Python 3.10 以上と g++（C++17）です。追加の Python パッケージや外部ジャッジへのアクセスは不要です。<code>CXX=clang++ python3 tools/test.py --sanitize</code> で別コンパイラを指定できます。最初の失敗で停止し、古い成功結果は破棄します。</p>
+<p>固定シードのランダム比較テスト、境界ケースの回帰テスト、AddressSanitizer と UndefinedBehaviorSanitizer を実行します。ソースとテストの SHA-256 を記録し、更新後に古い結果が成功表示へ流用されないようにしています。テスト中にコードが変化した場合も失敗扱いです。</p>
+<h2>変更するとき</h2>
+<ol><li>該当コードと verify/*.test.cpp のテストを変更する。</li><li>docs/catalog.json の仕様・計算量・前提条件・利用例・テスト対象を更新する。</li><li>上記コマンドでテスト、ページ生成、リンク検証を行う。</li><li>GitHub に push する。GitHub Actions が再検証し、main の成功したビルドを GitHub Pages に配置する。</li></ol>
+<h2>公開対象</h2>
+<p><code>tools/library.py</code> に指定したライブラリディレクトリ直下の .cpp/.hpp/.h と明示したテンプレートだけをコピーします。コンテストの回答、実行ファイル、入力・出力、画像、ローカル設定、AHC の作業フォルダはサイトに含めません。新しいカテゴリは明示的に追加してください。ソース中の元作者・出典コメントは保持します。</p>
+<h2>GitHub Pages の初期設定</h2>
+<p>リポジトリの Settings → Pages → Build and deployment の Source を GitHub Actions にします。Settings → Secrets and variables → Actions → Variables に PUBLISH_LIBRARY_PAGES=true を追加します。以後は main への push 時に検証と公開が走ります。pull request では検証とサイトビルドだけ実行します。非公開リポジトリの Pages 利用可否は GitHub の契約によります。公開サイトを作るためだけに、作業ファイルや履歴を含む元リポジトリ全体を公開する必要はありません。</p>
+<p>公開の仕組みは <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages">GitHub 公式のカスタムワークフロー</a>に従います。</p>
