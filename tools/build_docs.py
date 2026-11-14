@@ -41,20 +41,18 @@ def layout(title,body,prefix=''):
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(title)} · cp_library</title>
 <link rel="stylesheet" href="{prefix}assets/style.css"></head><body>
 <header><a class="brand" href="{prefix}index.html">cp<span>_</span>library</a><nav><a href="{prefix}index.html">ライブラリ一覧</a><a href="{prefix}guide.html">使い方・検証</a><a href="https://github.com/KentaroMatsushita/cp-library">GitHub ↗</a></nav></header>
-<main>{body}</main><footer>Competitive Programming Library · C++17 / C++20 · テスト範囲は各ページに記載</footer>
+<main>{body}</main><footer>cp_library</footer>
 <script src="{prefix}assets/main.js" defer></script></body></html>'''
 
 groups={}
 for path in files: groups.setdefault(path.split('/')[0] if '/' in path else 'template',[]).append(path)
 verified=sum(status(p)[1]=='passed' for p in files)
-body=f'''<section class="hero"><p class="eyebrow">KENTARO MATSUSHITA / ALGORITHM NOTES</p>
-<h1>考えたことを、<br>使えるコードに。</h1><p>競技プログラミングのライブラリと実装ノート。<br>前提条件・計算量・検証範囲を、コードのそばに。</p>
-<div class="stats"><div><strong>{len(files)}</strong><span>ソースファイル</span></div><div><strong>{len(metadata)}</strong><span>説明を整備</span></div><div><strong>{verified}</strong><span>現在のテストで確認</span></div></div></section>
-<section class="feature"><span>NEW / GEOMETRY</span><h2>凸多角形への問いを O(log N) で。</h2><p>内外判定・直線交点・最遠点探索、そして半平面交差。</p><a href="library/{slug('geometry/geometry.hpp')}">幾何ライブラリを読む →</a></section>
+body=f'''<h1>cp_library</h1>
+<p>競技プログラミング用の C++ ライブラリ。</p>
 <section class="catalog"><aside><h2>カテゴリ</h2>{''.join(f'<a href="#cat-{e(k)}">{e(k)} <span>{len(v)}</span></a>' for k,v in groups.items())}</aside><div>
 <label class="search">ライブラリを探す<input id="search" type="search" placeholder="名前・用途・ファイル名で検索" autocomplete="off"></label>
 <label class="filter"><input id="documented" type="checkbox"> 現在のテストで確認したものだけ表示</label>
-<p class="notice">各ファイルの説明と、実際にテストした範囲を区別しています。未完成の実装は各ページに明記しています。テスト成功は全 API・全入力の保証ではありません。</p><p id="empty" hidden>該当するライブラリがありません。</p>'''
+<p class="verification-note">テスト状況・前提条件・使い方は各ファイルのページに記載しています。</p><p id="empty" hidden>該当するライブラリがありません。</p>'''
 for group, paths in groups.items():
     body+=f'<section class="group" id="cat-{e(group)}"><h2>{e(group)}</h2><ul>'
     for path in paths:
@@ -62,7 +60,7 @@ for group, paths in groups.items():
         title=item.get('title',Path(path).stem)
         text=item.get('summary','既存実装の目録。説明・コードレビュー・テストは未整備です。')
         label,cls=status(path)
-        body+=f'''<li class="entry" data-documented="{int(cls=='passed')}" data-search="{e((path+' '+title+' '+text).lower())}"><a href="library/{slug(path)}"><div><h3>{e(title)}</h3><span class="badge {cls}">{e(label)}</span></div><p>{e(text)}</p><code>{e(path)}</code></a></li>'''
+        body+=f'''<li class="entry" data-documented="{int(cls=='passed')}" data-search="{e((path+' '+title+' '+text).lower())}"><a href="library/{slug(path)}"><span class="entry-name">{e(title)}</span> <code>({e(path)})</code> <span class="badge {cls}">{e(label)}</span></a></li>'''
     body+='</ul></section>'
 body+='</div></section>'
 (out/'index.html').write_text(layout('ライブラリ一覧',body),encoding='utf-8')
