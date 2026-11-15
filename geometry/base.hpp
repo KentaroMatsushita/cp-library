@@ -13,6 +13,8 @@ inline constexpr Real eps = 1e-12L;
 inline int sign(Real x) { return (x > eps) - (x < -eps); }
 struct Point {
     Real x = 0, y = 0;
+    constexpr Point() = default;
+    constexpr Point(Real x, Real y) : x(x), y(y) {}
     Point operator+(Point p) const { return {x+p.x,y+p.y}; }
     Point operator-(Point p) const { return {x-p.x,y-p.y}; }
     Point operator*(Real k) const { return {x*k,y*k}; }

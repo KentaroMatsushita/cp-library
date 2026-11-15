@@ -1,5 +1,7 @@
 <h2>個別ヘッダ</h2>
 <p>必要な機能だけ include できます。各ヘッダは標準ヘッダと依存ヘッダを自分で読み込みます。全機能を使う場合は <code>geometry/geometry.hpp</code> を読み込みます。</p><ul><li><a href="geometry_base_hpp-9b586ee7.html">geometry/base.hpp</a></li><li><a href="geometry_convex_hpp-3bb41f03.html">geometry/convex.hpp</a></li><li><a href="geometry_halfplane_hpp-b21be23a.html">geometry/halfplane.hpp</a></li><li><a href="geometry_circle_hpp-c41ead0c.html">geometry/circle.hpp</a></li><li><a href="geometry_algorithms_hpp-5c2fbb8a.html">geometry/algorithms.hpp</a></li></ul>
+<h2>Point の構築</h2>
+<p><code>Point(x, y)</code>、<code>Point{x, y}</code> のどちらでも構築できます。<code>Point()</code> は (0,0) です。C++17 の <code>vector&lt;Point&gt;::emplace_back(x,y)</code> と constexpr 構築にも対応します。</p>
 <h2>入力テンプレートとの併用</h2>
 <p><code>IN</code> という幾何の定数は入力関数 <code>IN(...)</code> と競合するため廃止しました。内外判定は <code>Location::outside</code>（0）、<code>Location::boundary</code>（1）、<code>Location::inside</code>（2）です。コード中の旧 <code>IN/ON/OUT</code> との比較を書き換えてください。これにより <code>using namespace cp_geometry;</code> と普段の <code>INT(x)</code> を併用できます。</p>
 <p>新しい幾何ヘッダは namespace やマクロをグローバルに追加しません。INT/IN/OUT、min/max、all/rep 等はヘッダ内部で一時的に退避し、読込後に元通り復元します。実際の <code>my_template.hpp</code> を先・後に読み込む2通りでテストしています。<code>namespace cg=cp_geometry;</code> と必要な型を修飾して使うと、他のライブラリの型とも区別できます。任意の識別子を置換するマクロや <code>#define int ...</code> に対応する保証ではありません。</p>

@@ -3,8 +3,8 @@
     "平面幾何の点・直線・線分・多角形の基本",
     "Point、Line、内積・外積、回転、射影、線分交差と距離、符号付き面積、一般単純多角形の内外判定。外部の競プロテンプレートを必要としません。",
     "点・直線・線分の基本操作 O(1)、多角形の面積・一般内外判定 O(N)。",
-    "C++17、cp_geometry 名前空間、Real=long double、eps=1e-12。Location は scoped enum（outside=0, boundary=1, inside=2）で、入力関数 IN/OUT と衝突しない。Line は有限な異なる2点が必要。面積は原点を平行移動してから加算し、大きな共通オフセットによる桁落ちを軽減する。絶対誤差を使う浮動小数点幾何で、NaN・無限大・極端なスケールは対象外。",
-    "#include \"geometry/base.hpp\"\nnamespace cg=cp_geometry;\nstd::vector<cg::Point> p{{0,0},{2,0},{0,2}};\nauto where=cg::contains(p,{0.5L,0.5L});\nassert(where==cg::Location::inside);\nauto area=cg::polygon_area(p); // 2"
+    "Point(x,y) と Point{x,y} の両方で構築でき、Point() は原点。C++17、cp_geometry 名前空間、Real=long double、eps=1e-12。Location は scoped enum（outside=0, boundary=1, inside=2）で、入力関数 IN/OUT と衝突しない。Line は有限な異なる2点が必要。面積は原点を平行移動してから加算し、大きな共通オフセットによる桁落ちを軽減する。絶対誤差を使う浮動小数点幾何で、NaN・無限大・極端なスケールは対象外。",
+    "#include \"geometry/base.hpp\"\nnamespace cg=cp_geometry;\ncg::Point point(1,2);\nstd::vector<cg::Point> p{{0,0},{2,0},{0,2}};\nauto where=cg::contains(p,{0.5L,0.5L});\nassert(where==cg::Location::inside);\nauto area=cg::polygon_area(p); // 2"
   ],
   "geometry/convex.hpp": [
     "凸包・凸多角形の対数時間クエリ",

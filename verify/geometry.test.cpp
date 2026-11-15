@@ -17,6 +17,13 @@ vector<Point> brute_intersections(const vector<Point>& p,const Line& l) {
     return q;
 }
 int main() {
+    constexpr Point origin;
+    constexpr Point constructed(2,3);
+    static_assert(origin.x==0 && origin.y==0);
+    static_assert(constructed.x==2 && constructed.y==3);
+    std::vector<Point> constructed_points;
+    constructed_points.emplace_back(4,5);
+    check(constructed_points[0].x==4 && constructed_points[0].y==5);
     mt19937 rng(928431);
     auto random_point=[&](){return Point{Real(int(rng()%201)-100),Real(int(rng()%201)-100)};};
     for(int t=0;t<1000;++t) {

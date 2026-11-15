@@ -1,0 +1,9 @@
+{
+  "modular/modint1.cpp": [
+    "法1e9+7のmodint・CRT畳み込み",
+    "剰余算術と階乗表、3つのNTT素数とCRTによる畳み込み、Taylor Shift等。C++17 で単独 include でき、ソース全文を提出コードへそのまま貼り付けても利用できます。",
+    "剰余加減乗算O(1)、逆元O(log法)またはキャッシュ、畳み込みO(N log N)。",
+    "標準ヘッダを自分で読み込むため ll・rep・si・all・fore・using namespace std は不要。mint/vmint は modular 名前空間の型エイリアス。既存の呼び方を保つため末尾の using namespace modular は維持する。my_template.hpp と両方の読込順で検証済み。modint2 等の同名 modular 実装とは同時に使わない。fact/ifact は非負かつ法未満、割算はゼロでない元を想定。標準の法は素数1e9+7。CRTのNTT長は3法全てで対応する2冪。inline キャッシュと関数により複数翻訳単位の重複定義を防ぐ。",
+    "#include \"modular/modint1.cpp\"\nint main() {\n    mint x = 2;\n    auto combinations = C(5,2); // 10\n    Poly a{1,2}, b{3,4};\n    auto c = a*b; // {3,10,8}\n    return (x*x).val() == 4 ? 0 : 1;\n}"
+  ]
+}

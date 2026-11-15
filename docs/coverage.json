@@ -104,5 +104,11 @@
     "geometry/base.hpp",
     "geometry/convex.hpp",
     "geometry/halfplane.hpp"
+  ],
+  "verify/modint1_standalone.test.cpp": [
+    "modular/modint1.cpp"
+  ],
+  "verify/modint1_compat_reverse.test.cpp": [
+    "modular/modint1.cpp"
   ]
 }

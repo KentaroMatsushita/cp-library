@@ -1,18 +1,31 @@
+#pragma once
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <deque>
+#include <istream>
+#include <iterator>
+#include <ostream>
+#include <string>
+#include <vector>
+
+// Prime-modulus arithmetic and polynomial convolution. Self-contained C++17.
 namespace modular {
 constexpr int MOD = 1000000007;
 const int MAXN = 11000000;
 template <int Modulus> class modint;
-#define mint modint<MOD>
-#define vmint vector<mint>
-vector<mint> Inv;
-mint inv(int x);
+using mint = modint<MOD>;
+using vmint = std::vector<mint>;
+inline mint inv(int x);
 template <int Modulus> class modint {
 
   public:
     static constexpr int mod() { return Modulus; }
     int a;
 
-    constexpr modint(const ll x = 0) noexcept : a(((x % Modulus) + Modulus) % Modulus) {}
+    constexpr modint(const long long x = 0) noexcept : a(((x % Modulus) + Modulus) % Modulus) {}
     constexpr int &val() noexcept { return a; }
     constexpr const int &val() const noexcept { return a; }
     constexpr modint operator-() const noexcept { return modint() - *this; }
@@ -77,79 +90,79 @@ template <int Modulus> class modint {
     constexpr friend bool operator!=(const modint &lhs, const modint &rhs) { return lhs.a != rhs.a; }
     // constexpr friend modint operator^=(const modint &lhs, const modint &rhs) { return modint(lhs) ^= modint(rhs); }
 };
-vmint Fact{1, 1}, Ifact{1, 1};
-mint inv(int n) {
+inline vmint Inv, Fact{1, 1}, Ifact{1, 1};
+inline mint inv(int n) {
     if(n > MAXN) return (mint(n)).pow(MOD - 2);
     if(Inv.empty()) Inv.emplace_back(0), Inv.emplace_back(1);
     if(Inv.size() > n)
         return Inv[n];
     else {
         for(int i = Inv.size(); i <= n; ++i) {
-            auto [y, x] = div(int(MOD), i);
+            auto [y, x] = std::div(int(MOD), i);
             Inv.emplace_back(Inv[x] * (-y));
         }
         return Inv[n];
     }
 }
-mint fact(int n) {
+inline mint fact(int n) {
     if(Fact.size() > n)
         return Fact[n];
     else
         for(int i = Fact.size(); i <= n; ++i) Fact.emplace_back(Fact[i - 1] * i);
     return Fact[n];
 }
-mint ifact(int n) {
+inline mint ifact(int n) {
     if(Ifact.size() > n)
         return Ifact[n];
     else
         for(int i = Ifact.size(); i <= n; ++i) Ifact.emplace_back(Ifact[i - 1] * inv(i));
     return Ifact[n];
 }
-mint modpow(ll a, ll n) { return mint(a).pow(n); }
-mint inv(mint a) { return inv(a.a); }
-mint ifact(mint a) { return ifact(a.a); }
-mint fact(mint a) { return fact(a.a); }
-mint modpow(mint a, ll n) { return modpow(a.a, n); }
-mint C(int a, int b) {
+inline mint modpow(long long a, long long n) { return mint(a).pow(n); }
+inline mint inv(mint a) { return inv(a.a); }
+inline mint ifact(mint a) { return ifact(a.a); }
+inline mint fact(mint a) { return fact(a.a); }
+inline mint modpow(mint a, long long n) { return modpow(a.a, n); }
+inline mint C(int a, int b) {
     if(a < 0 || b < 0) return 0;
     if(a < b) return 0;
     if(a > MAXN) {
         mint res = 1;
-        rep(i, b) res *= a - i, res /= i + 1;
+        for(int i = 0; i < b; ++i) res *= a - i, res /= i + 1;
         return res;
     }
     return fact(a) * ifact(b) * ifact(a - b);
 }
-mint P(int a, int b) {
+inline mint P(int a, int b) {
     if(a < 0 || b < 0) return 0;
     if(a < b) return 0;
     if(a > MAXN) {
         mint res = 1;
-        rep(i, b) res *= a - i;
+        for(int i = 0; i < b; ++i) res *= a - i;
         return res;
     }
     return fact(a) * ifact(a - b);
 }
-ostream &operator<<(ostream &os, mint a) {
+inline std::ostream &operator<<(std::ostream &os, mint a) {
     os << a.a;
     return os;
 }
-istream &operator>>(istream &is, mint &a) {
-    ll x;
+inline std::istream &operator>>(std::istream &is, mint &a) {
+    long long x;
     is >> x;
     a = x;
     return is;
 }
 using Poly = vmint;
-template <int mod> void FMT(vector<modint<mod>> &f, bool inv = false) {
-    using V = vector<modint<mod>>;
+template <int mod> void FMT(std::vector<modint<mod>> &f, bool inv = false) {
+    using V = std::vector<modint<mod>>;
     static V g(30), ig(30);
     if(g.front().a == 0) {
         modint<mod> root = 2;
         while((root.pow((mod - 1) / 2)).a == 1) root += 1;
-        rep(i, 30) g[i] = -(root.pow((mod - 1) >> (i + 2))), ig[i] = g[i].inv();
+        for(int i = 0; i < 30; ++i) g[i] = -(root.pow((mod - 1) >> (i + 2))), ig[i] = g[i].inv();
     }
-    int n = size(f);
+    int n = static_cast<int>(f.size());
     if(!inv) {
         for(int m = n; m >>= 1;) {
             modint<mod> w = 1;
@@ -186,68 +199,71 @@ template <int mod> void FMT(vector<modint<mod>> &f, bool inv = false) {
         c = 1;
     for(auto &&e : f) e *= c;
 }
-Poly operator-(Poly f) {
+inline Poly operator-(Poly f) {
     for(auto &&e : f) e = -e;
     return f;
 }
-Poly &operator+=(Poly &l, const Poly &r) {
-    l.resize(max(l.size(), r.size()));
-    rep(i, r.size()) l[i] += r[i];
+inline Poly &operator+=(Poly &l, const Poly &r) {
+    l.resize(std::max(l.size(), r.size()));
+    for(std::size_t i = 0; i < r.size(); ++i) l[i] += r[i];
     return l;
 }
-Poly operator+(Poly l, const Poly &r) { return l += r; }
-Poly &operator-=(Poly &l, const Poly &r) {
-    l.resize(max(l.size(), r.size()));
-    rep(i, r.size()) l[i] -= r[i];
+inline Poly operator+(Poly l, const Poly &r) { return l += r; }
+inline Poly &operator-=(Poly &l, const Poly &r) {
+    l.resize(std::max(l.size(), r.size()));
+    for(std::size_t i = 0; i < r.size(); ++i) l[i] -= r[i];
     return l;
 }
-Poly operator-(Poly l, const Poly &r) { return l -= r; }
-Poly &operator<<=(Poly &f, size_t n) { return f.insert(f.begin(), n, 0), f; }
-Poly operator<<(Poly f, size_t n) { return f <<= n; }
-Poly &operator>>=(Poly &f, size_t n) { return f.erase(f.begin(), f.begin() + min(f.size(), n)), f; }
-Poly operator>>(Poly f, size_t n) { return f >>= n; }
+inline Poly operator-(Poly l, const Poly &r) { return l -= r; }
+inline Poly &operator<<=(Poly &f, std::size_t n) { return f.insert(f.begin(), n, 0), f; }
+inline Poly operator<<(Poly f, std::size_t n) { return f <<= n; }
+inline Poly &operator>>=(Poly &f, std::size_t n) { return f.erase(f.begin(), f.begin() + std::min(f.size(), n)), f; }
+inline Poly operator>>(Poly f, std::size_t n) { return f >>= n; }
 
 namespace NTT {
-constexpr int32_t mod0 = 167772161;
-constexpr int32_t mod1 = 469762049;
-constexpr int32_t mod2 = 754974721;
+constexpr std::int32_t mod0 = 167772161;
+constexpr std::int32_t mod1 = 469762049;
+constexpr std::int32_t mod2 = 754974721;
 using M0 = modint<mod0>;
 using M1 = modint<mod1>;
 using M2 = modint<mod2>;
 
-template <int mod> void mul(vector<modint<mod>> &l, vector<modint<mod>> &r) {
-    int n = size(l), m = size(r), sz = 1 << __lg(2 * (n + m - 1) - 1);
+template <int mod> void mul(std::vector<modint<mod>> &l, std::vector<modint<mod>> &r) {
+    int n = static_cast<int>(l.size()), m = static_cast<int>(r.size()), sz = 1;
+    if(n == 0 || m == 0) { l.clear(); return; }
+    while(sz < n + m - 1) sz *= 2;
     l.resize(sz), FMT<mod>(l);
     r.resize(sz), FMT<mod>(r);
-    rep(i, sz) l[i] *= r[i];
+    for(int i = 0; i < sz; ++i) l[i] *= r[i];
     FMT<mod>(l, true);
     l.resize(n + m - 1);
 }
-Poly mulraw(const Poly &l, const Poly &r) {
+inline Poly mulraw(const Poly &l, const Poly &r) {
     if(l.empty() or r.empty()) return Poly();
-    if(min(si(l), si(r)) < 100) {
-        Poly res(si(l) + si(r) - 1);
-        rep(i, si(l)) rep(j, si(r)) res[i + j] += l[i] * r[j];
+    if(std::min(l.size(), r.size()) < 100) {
+        Poly res(l.size() + r.size() - 1);
+        for(std::size_t i = 0; i < l.size(); ++i)
+            for(std::size_t j = 0; j < r.size(); ++j) res[i + j] += l[i] * r[j];
         return res;
     }
-    int n = size(l), m = size(r);
-    vector<M0> l0(n), r0(m);
-    vector<M1> l1(n), r1(m);
-    vector<M2> l2(n), r2(m);
-    rep(i, n) l0[i] = l[i].a, l1[i] = l[i].a, l2[i] = l[i].a;
-    rep(i, m) r0[i] = r[i].a, r1[i] = r[i].a, r2[i] = r[i].a;
+    int n = static_cast<int>(l.size()), m = static_cast<int>(r.size());
+    std::vector<M0> l0(n), r0(m);
+    std::vector<M1> l1(n), r1(m);
+    std::vector<M2> l2(n), r2(m);
+    for(int i = 0; i < n; ++i) l0[i] = l[i].a, l1[i] = l[i].a, l2[i] = l[i].a;
+    for(int i = 0; i < m; ++i) r0[i] = r[i].a, r1[i] = r[i].a, r2[i] = r[i].a;
     mul<mod0>(l0, r0), mul<mod1>(l1, r1), mul<mod2>(l2, r2);
     Poly res(n + m - 1);
     // garner
     static constexpr int r01 = M1(mod0).inv().a;
     static constexpr int r02 = M2(mod0).inv().a;
     static constexpr int r12 = M2(mod1).inv().a;
-    static constexpr int r02r12 = (ll)(r02)*r12 % mod2;
-    static constexpr ll w1 = mod0;
-    static constexpr ll w2 = (ll)(mod0)*mod1;
+    static constexpr int r02r12 = (long long)(r02)*r12 % mod2;
+    static constexpr long long w1 = mod0;
+    static constexpr long long w2 = (long long)(mod0)*mod1;
 
-    using i64 = int64_t;
-    rep(i, n + m - 1) {
+    using i64 = std::int64_t;
+    for(int i = 0; i < n + m - 1; ++i) {
         int n1 = l1[i].a, n2 = l2[i].a, a = l0[i].a;
         int b = i64(n1 + mod1 - a) * r01 % mod1;
         int c = (i64(n2 + mod2 - a) * r02r12 + i64(mod2 - b) * r12) % mod2;
@@ -256,20 +272,20 @@ Poly mulraw(const Poly &l, const Poly &r) {
     return res;
 }
 } // namespace NTT
-Poly operator*(const Poly &l, const Poly &r) { return NTT::mulraw(l, r); }
-Poly &operator*=(Poly &l, const Poly &r) { return l = l * r; }
-Poly integ(const Poly &f) {
+inline Poly operator*(const Poly &l, const Poly &r) { return NTT::mulraw(l, r); }
+inline Poly &operator*=(Poly &l, const Poly &r) { return l = l * r; }
+inline Poly integ(const Poly &f) {
     Poly res(f.size() + 1);
     for(int i = 1; i < (int)res.size(); ++i) res[i] = f[i - 1] / i;
     return res;
 }
 struct Prd {
-    deque<Poly> deq;
+    std::deque<Poly> deq;
     Prd() = default;
     void emplace(const Poly &f) { deq.emplace_back(f); }
     Poly calc() {
         if(deq.empty()) return {1};
-        sort(all(deq), [&](const Poly &f, const Poly &g) { return si(f) < si(g); });
+        std::sort(deq.begin(), deq.end(), [&](const Poly &f, const Poly &g) { return f.size() < g.size(); });
         while(deq.size() > 1) {
             deq.emplace_back(deq[0] * deq[1]);
             for(int i = 0; i < 2; ++i) deq.pop_front();
@@ -277,7 +293,7 @@ struct Prd {
         return deq.front();
     }
 };
-Poly prd(vector<Poly> &v) {
+inline Poly prd(std::vector<Poly> &v) {
     Prd p;
     for(auto &e : v) p.emplace(e);
     return p.calc();
@@ -288,84 +304,84 @@ Poly prd(vector<Poly> &v) {
 //     rep(i, res.size()) res[i] = f[i + 1] * (i + 1);
 //     return res;
 // }
-ostream &operator<<(ostream &os, const Poly &a) {
-    for(auto e : a) cout << e.a << " ";
+inline std::ostream &operator<<(std::ostream &os, const Poly &a) {
+    for(auto e : a) os << e.a << " ";
     return os;
 }
 
-vmint power_table(mint x, int len) {
+inline vmint power_table(mint x, int len) {
     vmint res(len + 1);
     res[0] = 1;
-    rep(i, len) res[i + 1] = res[i] * x;
+    for(int i = 0; i < len; ++i) res[i + 1] = res[i] * x;
     return res;
 }
 
 // calc f(x + a)
-Poly TaylorShift(Poly f, mint a) {
+inline Poly TaylorShift(Poly f, mint a) {
     int n = f.size();
-    rep(i, n) f[i] *= fact(i);
-    reverse(all(f));
+    for(int i = 0; i < n; ++i) f[i] *= fact(i);
+    std::reverse(f.begin(), f.end());
     Poly g(n, 1);
-    rep(i, 1, n) g[i] = g[i - 1] * a * inv(i);
+    for(int i = 1; i < n; ++i) g[i] = g[i - 1] * a * inv(i);
     f = (f * g);
     f.resize(n);
-    reverse(begin(f), end(f));
+    std::reverse(f.begin(), f.end());
 
-    rep(i, n) f[i] *= ifact(i);
+    for(int i = 0; i < n; ++i) f[i] *= ifact(i);
     return f;
 }
 
 // ボールの数、一個以上必要な数、入っていなくてもいい数(区別あり)
-mint choose(int num, int a, int b = 0) {
+inline mint choose(int num, int a, int b = 0) {
     if(num == 0) return !a;
     return C(num + b - 1, a + b - 1);
 }
 
 // +1 n 個 -1 m 個で累積和 >= 0
-mint Catalan(int n, int m) { return C(n + m, m) - C(n + m, m - 1); }
+inline mint Catalan(int n, int m) { return C(n + m, m) - C(n + m, m - 1); }
 
 // +1 n 個 -1 m 個で累積和 > -k
-mint Catalan2(int n, int m, int k) {
+inline mint Catalan2(int n, int m, int k) {
     if(m < k) return C(n + m, m);
     if(m < n + k) return C(n + m, m) - C(n + m, m - k);
     return 0;
 }
 
 // +1 n 個 -1 m 個で累積和 < +k
-mint Catalan3(int n, int m, int k) { return Catalan2(m, n, k); }
+inline mint Catalan3(int n, int m, int k) { return Catalan2(m, n, k); }
 
-string to_fraction(mint x) {
-    static const int M = sqrtl(MOD);
-    rep(i, 1, M + 1) {
-        if((x * i).a < M) return (i > 1 ? to_string((x * i).a) + " / " + to_string(i) : to_string((x * i).a));
-        if(MOD - (x * i).a < M) return "-" + (i > 1 ? to_string(MOD - (x * i).a) + " / " + to_string(i) : to_string(MOD - (x * i).a));
+inline std::string to_fraction(mint x) {
+    static const int M = std::sqrt(static_cast<long double>(MOD));
+    for(int i = 1; i <= M; ++i) {
+        if((x * i).a < M) return (i > 1 ? std::to_string((x * i).a) + " / " + std::to_string(i) : std::to_string((x * i).a));
+        if(MOD - (x * i).a < M) return "-" + (i > 1 ? std::to_string(MOD - (x * i).a) + " / " + std::to_string(i) : std::to_string(MOD - (x * i).a));
     }
     return "?";
 }
 
-string to_fraction(vmint x) {
-    string res;
+inline std::string to_fraction(vmint x) {
+    std::string res;
     bool st = true;
-    rep(i, si(x)) {
+    for(std::size_t i = 0; i < x.size(); ++i) {
         if(x[i].a == 0) continue;
         auto c = to_fraction(x[i]);
         if(c[0] == '-') {
-            res += " " + c + (i ? " x^" + to_string(i) : "");
+            res += " " + c + (i ? " x^" + std::to_string(i) : "");
             st = false;
         } else {
             if(!st)
                 res += " +";
             else
                 st = false;
-            res += c + (i ? " x^" + to_string(i) : "");
+            res += c + (i ? " x^" + std::to_string(i) : "");
         }
     }
     return res;
 }
 
-mint eval(const vmint &f, mint x) {
+inline mint eval(const vmint &f, mint x) {
     mint res, t = 1;
-    fore(e, f) res += t * e, t *= x;
+    for(const auto &e : f) res += t * e, t *= x;
     return res;
 }
 } // namespace modular
