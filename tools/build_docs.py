@@ -8,7 +8,7 @@ import re
 import shutil
 import hashlib
 from urllib.parse import quote
-from library import ROOT, catalog, sources, fingerprint
+from library import ROOT, catalog, sources, fingerprint, SUPPORT_FILES
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--output',default='_site')
@@ -90,14 +90,23 @@ for path in files:
         body+='<h2>明示された依存</h2><ul>'
         for dep in includes:
             relative=(Path(path).parent/dep).as_posix()
-            resolved=relative if relative in files else dep
-            body+=f'<li><a href="{slug(resolved)}">{e(dep)}</a></li>' if resolved in files else f'<li><code>{e(dep)}</code>（外部または公開対象外）</li>'
+            resolved=relative if relative in files or relative in SUPPORT_FILES else dep
+            if resolved in files:
+                body+=f'<li><a href="{slug(resolved)}">{e(dep)}</a></li>'
+            elif resolved in SUPPORT_FILES:
+                body+=f'<li><a href="../source/{quote(resolved)}">{e(dep)}</a>（補助ヘッダ）</li>'
+            else:
+                body+=f'<li><code>{e(dep)}</code>（外部または公開対象外）</li>'
         body+='</ul>'
     body+=f'<h2>ソースコード</h2><p><a href="../source/{quote(path)}" download>ファイルをダウンロード</a> · <a href="https://github.com/KentaroMatsushita/cp-library/blob/main/{quote(path)}">GitHub で見る ↗</a></p><button class="copy" type="button" data-copy="source">コードをコピー</button><pre><code id="source">{e(source)}</code></pre></article>'
     (out/'library'/slug(path)).write_text(layout(title,body,'../'),encoding='utf-8')
     target=out/'source'/path
     target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(source,encoding='utf-8')
+for path in SUPPORT_FILES:
+    target=out/'source'/path
+    target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copyfile(ROOT/path,target)
 (out/'tests').mkdir(exist_ok=True)
 for test in sorted((ROOT/'verify').glob('*.test.cpp')):
     body=f'<article><h1>{e(test.name)}</h1><p>公開テストの実装。固定シードで再現可能な検証を行います。</p><pre><code>{e(test.read_text())}</code></pre></article>'
@@ -107,5 +116,5 @@ report_text=f'現在のソースに一致するテスト成功結果がありま
 (out/'guide.html').write_text(layout('使い方・検証',f'<article><h1>使い方・検証</h1><p class="notice">{e(report_text)}</p>{guide}</article>'),encoding='utf-8')
 shutil.copytree(ROOT/'docs/assets',out/'assets',dirs_exist_ok=True)
 (out/'.nojekyll').touch()
-(out/'manifest.json').write_text(json.dumps({'sources':files,'documented':sorted(metadata),'verified':verified,'fingerprint':fingerprint()},ensure_ascii=False,indent=2),encoding='utf-8')
+(out/'manifest.json').write_text(json.dumps({'sources':files,'support_files':list(SUPPORT_FILES),'documented':sorted(metadata),'verified':verified,'fingerprint':fingerprint()},ensure_ascii=False,indent=2),encoding='utf-8')
 print(f'Built {len(files)} source pages; {len(metadata)} documented; {verified} covered by current passing tests -> {out}')

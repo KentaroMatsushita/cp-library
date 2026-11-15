@@ -1,4 +1,8 @@
-template <typename T = ll> struct Point {
+#pragma once
+#include <iostream>
+#include <vector>
+namespace cp_integer_geometry {
+template <typename T = long long> struct Point {
     T x, y;
     constexpr Point operator+(const Point rhs) const noexcept { return Point(*this) += rhs; }
     constexpr Point operator-(const Point rhs) const noexcept { return Point(*this) -= rhs; }
@@ -29,8 +33,10 @@ template <typename T = ll> struct Point {
     }
     Point(T x, T y) : x(x), y(y) {}
     Point() = default;
-    void print() { cout << x << " " << y << endl; }
+    void print() { std::cout << x << " " << y << std::endl; }
 };
-template <typename T = ll> using Points = vector<Point<T>>;
+template <typename T = long long> using Points = std::vector<Point<T>>;
 
 // ソートは x >= 0 y > 0 から反時計回り
+
+} // namespace cp_integer_geometry

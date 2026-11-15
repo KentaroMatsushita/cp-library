@@ -41,7 +41,7 @@ int main() {
         }
         // All vertices, edge-coincidence and tangencies.
         for(int i=0;i<int(p.size());++i) {
-            check(poly.contains(p[i])==ON);
+            check(poly.contains(p[i])==Location::boundary);
             if(p.size()>1) {
                 Line l(p[i],p[(i+1)%p.size()]);
                 auto x=poly.line_intersections(l),y=brute_intersections(p,l);
@@ -83,7 +83,7 @@ int main() {
     check(!segments_intersect({0,0},{0,0},{1,0},{2,0}));
     check(close(segment_distance({0,0},{0,0},{3,4}),5));
     check(near(projection(Line({0,0},{2,0}),{1,3}),{1,0}));
-    check(half_plane_intersection({}).kind==RegionKind::UNBOUNDED);
+    check(half_plane_intersection(std::vector<Line>{}).kind==RegionKind::UNBOUNDED);
     check(half_plane_intersection(vector<Line>{Line({0,0},{1,0})}).kind==RegionKind::UNBOUNDED);
     check(half_plane_intersection(vector<Line>{Line({0,1},{1,1}),Line({1,0},{0,0})}).kind==RegionKind::EMPTY);
     check(half_plane_intersection(vector<Line>{Line({0,0},{1,0}),Line({1,0},{0,0})}).kind==RegionKind::UNBOUNDED);

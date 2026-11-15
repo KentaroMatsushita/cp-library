@@ -1,0 +1,9 @@
+{
+  "geometry/circle.hpp": [
+    "円の交点・接線・共通面積",
+    "円と直線・線分・円の境界交点、点からの接点、共通接線、円と円・一般の単純多角形との共通面積を求めます。直径円・外接円・内接円も構成できます。",
+    "円と多角形の共通面積は O(N)、追加メモリ O(1)。その他の各関数は O(1)。",
+    "geometry/base.hpp に依存する自己完結した C++17 ヘッダ。cp_geometry 名前空間、long double。Circle(center,radius) は有限座標と半径0以上が必要。多角形は自己交差しない頂点列で、凹形・時計回りにも対応。交点は境界上の点を返し、接点は1個。等しい正半径の円は CircleIntersection::coincident=true。半径0の円も対応。数値・退化の詳細は説明を参照。",
+    "#include \"geometry/circle.hpp\"\nusing cp_geometry::Circle;\nCircle circle({0,0}, 2);\nstd::vector<cp_geometry::Point> polygon{{-3,-3},{3,-3},{3,3},{-3,3}};\nauto area = cp_geometry::circle_polygon_intersection_area(circle, polygon);\nauto lens = cp_geometry::circle_overlap_area(circle, Circle({2,0}, 2));\nauto intersections = cp_geometry::circle_intersections(circle, Circle({2,0}, 2));"
+  ]
+}

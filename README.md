@@ -10,29 +10,36 @@
 
 ## 幾何
 
-`geometry/geometry.hpp` は C++17 で単独 include できます。
+C++17、`cp_geometry` 名前空間。用途に応じて `geometry/base.hpp`（基本）、`convex.hpp`（凸多角形）、`halfplane.hpp`（半平面）、`circle.hpp`（円）、`algorithms.hpp`（最近点対等）を単独 include できます。全体は `geometry/geometry.hpp`。共通テンプレートには依存しません。
 
 ```cpp
 #include "geometry/geometry.hpp"
-using namespace cp_geometry;
+namespace cg=cp_geometry;
 
 int main() {
-    ConvexPolygon p({{0,0},{4,0},{4,3},{0,3}});
-    auto where = p.contains({1,1}); // IN
-    auto hit = p.line_intersections(Line({-1,1},{5,1})); // (0,1), (4,1)
-    auto diameter_squared = convex_diameter2(p.vertices()); // 25
+    cg::ConvexPolygon p({{0,0},{4,0},{4,3},{0,3}});
+    auto where=p.contains({1,1}); // cg::Location::inside
+    auto hit=p.line_intersections(cg::Line({-1,1},{5,1}));
+    std::vector<cg::HalfPlane> h{{-1,0,0},{0,-1,0},{1,0,4},{0,1,3}};
+    auto region=cg::half_plane_intersection(h); // a*x+b*y<=c
+    cg::Circle a({0,0},1), b({1,0},1);
+    auto lens=cg::circle_overlap_area(a,b);
+    auto clipped=cg::circle_polygon_intersection_area(a,p.vertices());
 }
 ```
 
-凸包と探索用インデックスの前処理は `O(N log N)`。内外判定、指定方向の最遠点、直線との境界交点は各 `O(log N)`。半平面交差には矩形内の `O(N log N)` 版と、空・非有界・多角形・退化を区別する一般版（期待 `O(N log N)`、最悪 `O(N²)`）があります。
+内外判定・直線交点は各 O(log N)。既存の厳密凸包は `from_convex_hull` で O(N) 構築、任意点集合からは O(N log N)。円と多角形の共通面積 O(N)、円と円の共通面積 O(1)、最近点対 O(N log N)、厳密凸包の Minkowski 和 O(N+M) です。
 
-座標は `long double`、絶対誤差 `1e-12` です。一般版の退化した領域では実行可能点だけを返し、線分の両端は返しません。詳細は説明サイトまたは `docs/geometry.html` を参照してください。
+半平面交差は `std::vector<cg::HalfPlane>{{a,b,c}, ...}` を受け取ります。矩形内版 O(N log N)、一般版は期待 O(N log N)・最悪 O(N²) で、空・非有界・有界多角形・有界退化を区別します。退化領域では実行可能点だけを返します。
+
+判定定数の旧 `IN/ON/OUT` は入力関数と競合するため廃止し、`Location::inside/boundary/outside` に変更しました。普段の `my_template.hpp` と両方の include 順でテストしています。座標は long double、絶対誤差 1e-12。精度・退化・前提条件は各説明ページを参照してください。
 
 ## 検証・サイト生成
 
 必要環境は Python 3.10+ と GCC/Clang の C++17。追加の Python パッケージや外部ジャッジ接続は不要です。一部の既存 SIMD ライブラリのテストには AVX2/BMI2/POPCNT が必要です。
 
 ```sh
+python3 tools/check_headers.py
 python3 tools/test.py --sanitize
 python3 tools/build_docs.py
 python3 tools/check_docs.py

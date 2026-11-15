@@ -1,18 +1,22 @@
 #pragma once
+#include <algorithm>
+#include <queue>
+#include <utility>
+#include <vector>
 template <typename G> struct HLDecomposition {
     G &g;
-    vector<int> sz, in, out, head, rev, par, d, vis, roots;
+    std::vector<int> sz, in, out, head, rev, par, d, vis, roots, root;
 
-    HLDecomposition(G &g, vector<int> r = vector<int>())
-        : g(g), d(g.size()), sz(g.size()), in(g.size()), out(g.size()), head(g.size()), rev(g.size()), par(g.size()) {
-        if(empty(r)) {
-            vector<bool> vis(g.size());
+    HLDecomposition(G &g, std::vector<int> r = std::vector<int>())
+        : g(g), sz(g.size()), in(g.size()), out(g.size()), head(g.size()), rev(g.size()), par(g.size()), d(g.size()), root(g.size()) {
+        if(std::empty(r)) {
+            std::vector<bool> vis(g.size());
             for(int i = 0; i < g.size(); i++) {
                 if(vis[i]) continue;
                 roots.emplace_back(i);
-                queue<int> q;
+                std::queue<int> q;
                 q.emplace(i);
-                while(!empty(q)) {
+                while(!std::empty(q)) {
                     int x = q.front();
                     vis[x] = true;
                     q.pop();
@@ -25,54 +29,66 @@ template <typename G> struct HLDecomposition {
             roots = r;
     }
 
+    // Iterative traversals keep construction safe for path-shaped trees.
     void dfs_sz(int idx, int p) {
+        std::vector<int> order{idx};
+        root[idx] = p < 0 ? idx : root[p];
         par[idx] = p;
-        sz[idx] = 1;
-        if(g[idx].size() and g[idx][0] == p) swap(g[idx][0], g[idx].back());
-        for(auto &to : g[idx]) {
-            if(to == p) continue;
-            d[to] = d[idx] + 1;
-            dfs_sz(to, idx);
-            sz[idx] += sz[to];
-            if(sz[g[idx][0]] < sz[to]) swap(g[idx][0], to);
-        }
-    }
-
-    void dfs_hld(int idx, int par, int &times) {
-        in[idx] = times++;
-        rev[in[idx]] = idx;
-        for(auto &to : g[idx]) {
-            if(to == par) continue;
-            head[to] = (g[idx][0] == to ? head[idx] : to);
-            dfs_hld(to, idx, times);
-        }
-        out[idx] = times;
-    }
-
-    template <typename T> void dfs_hld(int idx, int par, int &times, vector<T> &v) {
-        in[idx] = times++;
-        rev[in[idx]] = idx;
-        for(auto &to : g[idx]) {
-            if(to == par) {
-                v[in[idx]] = to.cost;
-                continue;
+        d[idx] = p < 0 ? 0 : d[p] + 1;
+        for(std::size_t i = 0; i < order.size(); ++i) {
+            int v = order[i];
+            for(auto &to : g[v]) {
+                if(to == par[v]) continue;
+                par[to] = v;
+                root[to] = root[v];
+                d[to] = d[v] + 1;
+                order.push_back(to);
             }
-            head[to] = (g[idx][0] == to ? head[idx] : to);
-            dfs_hld(to, idx, times, v);
         }
-        out[idx] = times;
+        for(auto it = order.rbegin(); it != order.rend(); ++it) {
+            int v = *it;
+            sz[v] = 1;
+            int heavy = -1;
+            for(int i = 0; i < int(g[v].size()); ++i) {
+                int to = g[v][i];
+                if(to == par[v]) continue;
+                sz[v] += sz[to];
+                if(heavy < 0 || sz[to] > sz[int(g[v][heavy])]) heavy = i;
+            }
+            if(heavy >= 0) std::swap(g[v][0], g[v][heavy]);
+        }
     }
 
-    template <typename T> void dfs_hld(int idx, int par, int &times, vector<T> &v, vector<T> &a) {
-        in[idx] = times++;
-        rev[in[idx]] = idx;
-        v[in[idx]] = a[idx];
-        for(auto &to : g[idx]) {
-            if(to == par) continue;
-            head[to] = (g[idx][0] == to ? head[idx] : to);
-            dfs_hld(to, idx, times, v, a);
+    template <typename Visit> void traverse_hld(int idx, int &times, const Visit &visit) {
+        std::vector<int> stack{idx};
+        while(!stack.empty()) {
+            int v = stack.back();
+            stack.pop_back();
+            in[v] = times++;
+            rev[in[v]] = v;
+            out[v] = in[v] + sz[v];
+            visit(v);
+            for(int i = int(g[v].size()); i-- > 0;) {
+                int to = g[v][i];
+                if(to == par[v]) continue;
+                head[to] = i == 0 ? head[v] : to;
+                stack.push_back(to);
+            }
         }
-        out[idx] = times;
+    }
+
+    void dfs_hld(int idx, int, int &times) {
+        traverse_hld(idx, times, [](int) {});
+    }
+
+    template <typename T> void dfs_hld(int idx, int, int &times, std::vector<T> &v) {
+        traverse_hld(idx, times, [&](int x) {
+            for(auto &to : g[x]) if(to == par[x]) { v[in[x]] = to.cost; break; }
+        });
+    }
+
+    template <typename T> void dfs_hld(int idx, int, int &times, std::vector<T> &v, std::vector<T> &a) {
+        traverse_hld(idx, times, [&](int x) { v[in[x]] = a[x]; });
     }
 
     void build() {
@@ -84,8 +100,8 @@ template <typename G> struct HLDecomposition {
         }
     }
 
-    template <typename T> vector<T> build(int root = 0) {
-        vector<T> res(g.size());
+    template <typename T> std::vector<T> build(int /* root is selected in the constructor */ = 0) {
+        std::vector<T> res(g.size());
         int t = 0;
         for(auto root : roots) {
             head[root] = root;
@@ -95,8 +111,8 @@ template <typename G> struct HLDecomposition {
         return res;
     }
 
-    template <typename T> vector<T> build(vector<T> &a, int root = 0) {
-        vector<T> res(g.size());
+    template <typename T> std::vector<T> build(std::vector<T> &a, int /* root is selected in the constructor */ = 0) {
+        std::vector<T> res(g.size());
         int t = 0;
         for(auto root : roots) {
             head[root] = root;
@@ -107,6 +123,7 @@ template <typename G> struct HLDecomposition {
     }
 
     int la(int v, int k) {
+        if(k < 0 || k > d[v]) return -1;
         while(1) {
             int u = head[v];
             if(in[v] - k >= in[u]) return rev[in[v] - k];
@@ -117,7 +134,7 @@ template <typename G> struct HLDecomposition {
 
     int lca(int u, int v) {
         for(;; v = par[head[v]]) {
-            if(in[u] > in[v]) swap(u, v);
+            if(in[u] > in[v]) std::swap(u, v);
             if(head[u] == head[v]) return u;
         }
     }
@@ -125,7 +142,7 @@ template <typename G> struct HLDecomposition {
     template <typename T, typename Q, typename F> T query(int u, int v, const T &e, const Q &q, const F &f, bool edge = false) {
         T l = e, r = e;
         for(;; v = par[head[v]]) {
-            if(in[u] > in[v]) swap(u, v), swap(l, r);
+            if(in[u] > in[v]) std::swap(u, v), std::swap(l, r);
             if(head[u] == head[v]) break;
             l = f(q(in[head[v]], in[v] + 1), l);
         }
@@ -150,7 +167,7 @@ template <typename G> struct HLDecomposition {
 
     template <typename Q> void add(int u, int v, const Q &q, bool edge = false) {
         for(;; v = par[head[v]]) {
-            if(in[u] > in[v]) swap(u, v);
+            if(in[u] > in[v]) std::swap(u, v);
             if(head[u] == head[v]) break;
             q(in[head[v]], in[v] + 1);
         }
@@ -179,27 +196,28 @@ template <typename G> struct HLDecomposition {
     constexpr int dist(int u, int v) { return d[u] + d[v] - 2 * d[lca(u, v)]; }
 
     // u -> v の unique path
-    vector<int> road(int u, int v) {
+    std::vector<int> road(int u, int v) {
         int l = lca(u, v);
-        vector<int> a, b;
-        for(; v != l; v = par[v]) b.eb(v);
-        for(; u != l; u = par[u]) a.eb(u);
-        a.eb(l);
-        per(i, si(b), 0) a.eb(b[i]);
+        std::vector<int> a, b;
+        for(; v != l; v = par[v]) b.emplace_back(v);
+        for(; u != l; u = par[u]) a.emplace_back(u);
+        a.emplace_back(l);
+        for(auto it = b.rbegin(); it != b.rend(); ++it) a.emplace_back(*it);
         return a;
     }
 
     // u -> v の unique path の in[x] を連続部分ごとに固めたもの
     // l > r なら降順
-    vector<pair<int, int>> compressed_road(int u, int v) {
-        vector<pair<int, int>> l, r, res;
+    std::vector<std::pair<int, int>> compressed_road(int u, int v) {
+        std::vector<std::pair<int, int>> l, r, res;
         add(u, v, [&](int x, int y) { return r.emplace_back(x, y - 1); }, [&](int x, int y) { l.emplace_back(x, y - 1); });
         for(auto [x, y] : l) res.emplace_back(y, x);
-        reverse(begin(r), end(r));
+        std::reverse(std::begin(r), std::end(r));
         for(auto [x, y] : r) res.emplace_back(x, y);
         return res;
     }
     int jump(int s, int t, int i) {
+        if(i < 0) return -1;
         if(!i) return s;
         int l = lca(s, t);
         int dst = d[s] + d[t] - d[l] * 2;

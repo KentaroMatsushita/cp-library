@@ -1,0 +1,12 @@
+// Match macro_push.hpp; restore caller definitions exactly.
+#pragma pop_macro("near")
+#pragma pop_macro("sign")
+#pragma pop_macro("eps")
+#pragma pop_macro("rep")
+#pragma pop_macro("all")
+#pragma pop_macro("max")
+#pragma pop_macro("min")
+#pragma pop_macro("ON")
+#pragma pop_macro("OUT")
+#pragma pop_macro("IN")
+#pragma pop_macro("INT")

@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.parse import urlsplit, unquote
 import json
 import argparse
-from library import sources
+from library import sources, SUPPORT_FILES
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--site',default='_site')
@@ -26,8 +26,8 @@ for page in root.rglob('*.html'):
         target=(page.parent/unquote(url.path)).resolve()
         if not target.is_relative_to(root) or not target.exists(): failures.append((str(page.relative_to(root)),link))
 published={p.relative_to(root/'source').as_posix() for p in (root/'source').rglob('*') if p.is_file()}
-assert published==set(sources()), 'Published sources differ from the explicit allowlist'
+assert published==set(sources())|set(SUPPORT_FILES), 'Published sources differ from the explicit allowlist'
 assert not failures, failures
 manifest=json.loads((root/'manifest.json').read_text())
-assert set(manifest['sources'])==published
-print(f'Documentation links and allowlist passed: {len(published)} sources.')
+assert set(manifest['sources'])|set(manifest['support_files'])==published
+print(f'Documentation links and allowlist passed: {len(manifest["sources"])} sources and {len(SUPPORT_FILES)} support files.')

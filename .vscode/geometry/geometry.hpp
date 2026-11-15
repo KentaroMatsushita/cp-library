@@ -1,5 +1,19 @@
+#pragma once
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+#include <vector>
 namespace Geometry {
-using T = ll;
+using T = long long;
+using std::istream;
+using std::ostream;
+using std::vector;
+using std::sort;
+using std::begin;
+using std::end;
+using std::swap;
+using std::abs;
 inline constexpr int type(T x, T y) {
     if(x == 0 and y == 0) return 0;
     if(y < 0 or (y == 0 and x > 0)) return -1;
@@ -72,13 +86,13 @@ struct Circle {
 
 using pt = Point;
 using Points = vector<pt>;
-T cross(const pt &x, const pt &y) { return x.x * y.y - x.y * y.x; }
-T dot(const pt &x, const pt &y) { return x.x * y.x + x.y * y.y; }
+inline T cross(const pt &x, const pt &y) { return x.x * y.y - x.y * y.x; }
+inline T dot(const pt &x, const pt &y) { return x.x * y.x + x.y * y.y; }
 
 T abs2(const pt &x) { return dot(x, x); }
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_1_C
 // 点の回転方向
-int ccw(const Point &a, Point b, Point c) {
+inline int ccw(const Point &a, Point b, Point c) {
     b = b - a, c = c - a;
     if(cross(b, c) > 0) return +1;   // "COUNTER_CLOCKWISE"
     if(cross(b, c) < 0) return -1;   // "CLOCKWISE"
@@ -89,30 +103,30 @@ int ccw(const Point &a, Point b, Point c) {
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_2_A
 // 平行判定
-bool parallel(const Line &a, const Line &b) { return (cross(a.b - a.a, b.b - b.a) == 0); }
+inline bool parallel(const Line &a, const Line &b) { return (cross(a.b - a.a, b.b - b.a) == 0); }
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_2_A
 // 垂直判定
-bool orthogonal(const Line &a, const Line &b) { return (dot(a.a - a.b, b.a - b.b) == 0); }
+inline bool orthogonal(const Line &a, const Line &b) { return (dot(a.a - a.b, b.a - b.b) == 0); }
 
-bool intersect(const Line &l, const Point &p) { return abs(ccw(l.a, l.b, p)) != 1; }
+inline bool intersect(const Line &l, const Point &p) { return abs(ccw(l.a, l.b, p)) != 1; }
 
-bool intersect(const Line &l, const Line &m) { return !parallel(l, m); }
+inline bool intersect(const Line &l, const Line &m) { return !parallel(l, m); }
 
-bool intersect(const Segment &s, const Point &p) { return ccw(s.a, s.b, p) == 0; }
+inline bool intersect(const Segment &s, const Point &p) { return ccw(s.a, s.b, p) == 0; }
 
-bool intersect(const Line &l, const Segment &s) { return cross(l.b - l.a, s.a - l.a) * cross(l.b - l.a, s.b - l.a) <= 0; }
+inline bool intersect(const Line &l, const Segment &s) { return cross(l.b - l.a, s.a - l.a) * cross(l.b - l.a, s.b - l.a) <= 0; }
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_2_B
-bool intersect(const Segment &s, const Segment &t) { return ccw(s.a, s.b, t.a) * ccw(s.a, s.b, t.b) <= 0 && ccw(t.a, t.b, s.a) * ccw(t.a, t.b, s.b) <= 0; }
+inline bool intersect(const Segment &s, const Segment &t) { return ccw(s.a, s.b, t.a) * ccw(s.a, s.b, t.b) <= 0 && ccw(t.a, t.b, s.a) * ccw(t.a, t.b, s.b) <= 0; }
 
-T norm(const Point &p) { return p.x * p.x + p.y * p.y; }
-Point projection(const Segment &l, const Point &p) {
+inline T norm(const Point &p) { return p.x * p.x + p.y * p.y; }
+inline Point projection(const Segment &l, const Point &p) {
     T t = dot(p - l.a, l.a - l.b) / norm(l.a - l.b);
     return l.a + (l.a - l.b) * t;
 }
 
-Point crosspoint(const Line &l, const Line &m) {
+inline Point crosspoint(const Line &l, const Line &m) {
     T A = cross(l.b - l.a, m.b - m.a);
     T B = cross(l.b - l.a, l.b - m.a);
     if(A == 0 and B == 0) return m.a;
@@ -120,11 +134,11 @@ Point crosspoint(const Line &l, const Line &m) {
 }
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_2_C
-Point crosspoint(const Segment &l, const Segment &m) { return crosspoint(Line(l), Line(m)); }
+inline Point crosspoint(const Segment &l, const Segment &m) { return crosspoint(Line(l), Line(m)); }
 
 // http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_3_B
 // 凸性判定
-bool is_convex(const Points &p) {
+inline bool is_convex(const Points &p) {
     int n = (int)p.size();
     for(int i = 0; i < n; i++) {
         if(ccw(p[(i + n - 1) % n], p[i], p[(i + 1) % n]) == -1) return false;
@@ -132,7 +146,7 @@ bool is_convex(const Points &p) {
     return true;
 }
 
-Points convex_hull(Points &p) {
+inline Points convex_hull(Points &p) {
     int n = p.size(), k = 0;
     if(n <= 2) return p;
     sort(begin(p), end(p), [](pt x, pt y) { return (x.x != y.x ? x.x < y.x : x.y < y.y); });
@@ -148,13 +162,13 @@ Points convex_hull(Points &p) {
 }
 T area2(const Points &p) {
     T res = 0;
-    rep(i, si(p)) { res += cross(p[i], p[i == si(p) - 1 ? 0 : i + 1]); }
+    for(std::size_t i=0;i<p.size();++i) res += cross(p[i],p[(i+1)%p.size()]);
     return res;
 }
 
 enum { OUTTT, ONNN, INNN };
 
-int contains(const Points &Q, const Point &p) {
+inline int contains(const Points &Q, const Point &p) {
     bool in = false;
     for(int i = 0; i < Q.size(); i++) {
         Point a = Q[i] - p, b = Q[(i + 1) % Q.size()] - p;
@@ -165,5 +179,3 @@ int contains(const Points &Q, const Point &p) {
     return in ? INNN : OUTTT;
 }
 } // namespace Geometry
-
-using namespace Geometry;

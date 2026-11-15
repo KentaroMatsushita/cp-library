@@ -1,73 +1,104 @@
-struct bit_vector {
+#pragma once
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+struct WaveletMatrixBitVector {
     using u32 = uint32_t;
     using i64 = int64_t;
     using u64 = uint64_t;
 
     static constexpr u32 w = 64;
-    vector<u64> block;
-    vector<u32> count;
-    u32 n, zeros;
+    std::vector<u64> block;
+    std::vector<u32> count;
+    u32 n = 0, zeros = 0;
 
     inline u32 get(u32 i) const { return u32(block[i / w] >> (i % w)) & 1u; }
     inline void set(u32 i) { block[i / w] |= 1ULL << (i % w); }
 
-    bit_vector() {}
-    bit_vector(int _n) { init(_n); }
-    __attribute__((optimize("O3", "unroll-loops"))) void init(int _n) {
+    WaveletMatrixBitVector() : block(1), count(1) {}
+    WaveletMatrixBitVector(int _n) { init(_n); }
+    void init(int _n) {
+        if(_n < 0) throw std::invalid_argument("negative Wavelet Matrix size");
         n = zeros = _n;
-        block.resize(n / w + 1, 0);
-        count.resize(block.size(), 0);
+        block.assign(n / w + 1, 0);
+        count.assign(block.size(), 0);
     }
 
-    __attribute__((target("popcnt"))) void build() {
-        for(u32 i = 1; i < block.size(); ++i) count[i] = count[i - 1] + _mm_popcnt_u64(block[i - 1]);
+    void build() {
+        for(u32 i = 1; i < block.size(); ++i) count[i] = count[i - 1] + __builtin_popcountll(block[i - 1]);
         zeros = rank0(n);
     }
 
     inline u32 rank0(u32 i) const { return i - rank1(i); }
-    __attribute__((target("bmi2,popcnt"))) inline u32 rank1(u32 i) const { return count[i / w] + _mm_popcnt_u64(_bzhi_u64(block[i / w], i % w)); }
+    inline u32 rank1(u32 i) const {
+        const u32 offset = i % w;
+        const u64 mask = offset == 0 ? 0 : (u64(1) << offset) - 1;
+        return count[i / w] + __builtin_popcountll(block[i / w] & mask);
+    }
 };
 
 template <typename T, const int lg = 30> struct WaveletMatrix {
+    static_assert(std::is_integral<T>::value && lg > 0 && lg <= std::numeric_limits<T>::digits, "invalid Wavelet Matrix value type or bit width");
     using u32 = uint32_t;
     using i64 = int64_t;
     using u64 = uint64_t;
 
-    int n;
-    vector<T> a;
-    array<bit_vector, lg> bv;
+    int n = 0;
+    std::vector<T> a;
+    std::array<WaveletMatrixBitVector, lg> bv;
 
     WaveletMatrix() = default;
-    WaveletMatrix(u32 _n) : n(max<u32>(_n, 1)), a(n) {}
-    WaveletMatrix(const vector<T> &_a) : n(_a.size()), a(_a) { build(); }
+    WaveletMatrix(u32 _n) : n(_n), a(n) {}
+    WaveletMatrix(const std::vector<T> &_a) : n(_a.size()), a(_a) { build(); }
 
-    __attribute__((optimize("O3"))) void build() {
-        // lg = __lg(max<T>(*max_element(begin(a), end(a)), 1)) + 1;
-        for(int i = 0; i < lg; i++) bv[i] = bit_vector(n);
-        vector<T> cur = a, nxt(n);
+    void build() {
+        validate_values();
+        // lg = __lg(max<T>(*max_element(std::begin(a), std::end(a)), 1)) + 1;
+        for(int i = 0; i < lg; i++) bv[i] = WaveletMatrixBitVector(n);
+        std::vector<T> cur = a, nxt(n);
         for(int h = lg - 1; h >= 0; --h) {
             for(int i = 0; i < n; ++i)
                 if((cur[i] >> h) & 1) bv[h].set(i);
             bv[h].build();
-            array<decltype(begin(nxt)), 2> it{begin(nxt), begin(nxt) + bv[h].zeros};
+            std::array<decltype(std::begin(nxt)), 2> it{std::begin(nxt), std::begin(nxt) + bv[h].zeros};
             for(int i = 0; i < n; ++i) *it[bv[h].get(i)]++ = cur[i];
-            swap(cur, nxt);
+            std::swap(cur, nxt);
         }
         return;
     }
 
     void set(u32 i, const T &x) {
-        assert(x >= 0);
+        validate_value(x);
         a[i] = x;
     }
 
-    inline pair<u32, u32> succ0(int l, int r, int h) const { return make_pair(bv[h].rank0(l), bv[h].rank0(r)); }
+    static void validate_value(T x) {
+        if constexpr(std::is_signed<T>::value) {
+            if(x < 0) throw std::invalid_argument("Wavelet Matrix values must be nonnegative");
+        }
+        if constexpr(lg < std::numeric_limits<T>::digits) {
+            if(x >= (T(1) << lg)) throw std::out_of_range("Wavelet Matrix value exceeds bit width");
+        }
+    }
+    void validate_values() {
+        n = int(a.size());
+        for(const T &x : a) validate_value(x);
+    }
 
-    inline pair<u32, u32> succ1(int l, int r, int h) const {
+    inline std::pair<u32, u32> succ0(int l, int r, int h) const { return std::make_pair(bv[h].rank0(l), bv[h].rank0(r)); }
+
+    inline std::pair<u32, u32> succ1(int l, int r, int h) const {
         u32 l0 = bv[h].rank0(l);
         u32 r0 = bv[h].rank0(r);
         u32 zeros = bv[h].zeros;
-        return make_pair(l + zeros - l0, r + zeros - r0);
+        return std::make_pair(l + zeros - l0, r + zeros - r0);
     }
 
     // return a[k]
@@ -145,30 +176,32 @@ template <typename T, const int lg = 30> struct WaveletMatrix {
 
 template <typename T, typename sum_t = T, const int lg = 31> struct WaveletMatrix_sum : WaveletMatrix<T, lg> {
     using u32 = int32_t;
-    array<vector<sum_t>, lg> sums;
-    vector<sum_t> acc;
+    std::array<std::vector<sum_t>, lg> sums;
+    std::vector<sum_t> acc;
     using WM = WaveletMatrix<T, lg>;
     using WM::a;
     using WM::bv;
     using WM::n;
-    using WM::WaveletMatrix;
-    void build() = delete;
-    WaveletMatrix_sum(const vector<T> &_a) : acc(_a.size() + 1) {
-        n = _a.size();
+    WaveletMatrix_sum() : acc(1) {}
+    explicit WaveletMatrix_sum(u32 size) : WM(size), acc(size + 1) {}
+    WaveletMatrix_sum(const std::vector<T> &_a) {
         a = _a;
         build2();
-        for(int i = 0; i < n; i++) acc[i + 1] = acc[i] + a[i];
     }
-    __attribute__((optimize("O3"))) void build2() {
-        for(int i = 0; i < lg; i++) bv[i] = bit_vector(n), sums[i].assign(n + 1, sum_t());
-        vector<T> cur = a, nxt(n);
+    void build() { build2(); }
+    void build2() {
+        this->validate_values();
+        acc.assign(n + 1, sum_t());
+        for(int i = 0; i < n; i++) acc[i + 1] = acc[i] + a[i];
+        for(int i = 0; i < lg; i++) bv[i] = WaveletMatrixBitVector(n), sums[i].assign(n + 1, sum_t());
+        std::vector<T> cur = a, nxt(n);
         for(int h = lg - 1; h >= 0; --h) {
             for(int i = 0; i < n; ++i)
                 if((cur[i] >> h) & 1) bv[h].set(i);
             bv[h].build();
-            array<decltype(begin(nxt)), 2> it{begin(nxt), begin(nxt) + bv[h].zeros};
+            std::array<decltype(std::begin(nxt)), 2> it{std::begin(nxt), std::begin(nxt) + bv[h].zeros};
             for(int i = 0; i < n; ++i) *it[bv[h].get(i)]++ = cur[i];
-            swap(cur, nxt);
+            std::swap(cur, nxt);
             for(int i = 0; i < n; i++) sums[h][i + 1] = sums[h][i] + cur[i];
         }
     }

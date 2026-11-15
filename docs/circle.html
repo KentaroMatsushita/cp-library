@@ -1,0 +1,37 @@
+<h2>基本型と構成</h2>
+<p><code>#include "geometry/circle.hpp"</code> だけで使用できます。型・関数は <code>cp_geometry</code> 名前空間にあります。<code>Circle(center,radius)</code> は中心 <code>Point</code> と半径 <code>Real</code> を受け取ります。半径0は1点として扱い、負の半径・非有限値は <code>std::invalid_argument</code> です。</p>
+<table><thead><tr><th>関数</th><th>意味</th></tr></thead><tbody>
+<tr><td>circle_area(circle)</td><td>円板の面積 πr²</td></tr>
+<tr><td>circle_from_diameter(a,b)</td><td>線分 ab を直径とする円。a=b なら半径0</td></tr>
+<tr><td>circumcircle(a,b,c)</td><td>三角形の外接円。3点が一直線なら例外</td></tr>
+<tr><td>incircle(a,b,c)</td><td>三角形の内接円。3点が一直線なら例外。頂点の向きは自由</td></tr>
+</tbody></table>
+<p>外接円は a を原点とする連立方程式を解き、内接円は向かい側の辺長を重みにした中心と、面積を半周長で割った半径を使います。ほぼ一直線の三角形の外接円は数値的に不安定になり、半径が非常に大きくなります。</p>
+<h2>境界との交点</h2>
+<table><thead><tr><th>関数</th><th>戻り値・順序</th></tr></thead><tbody>
+<tr><td>line_circle_intersections(line,circle)</td><td>vector&lt;Point&gt;。直線の方向順に0〜2点</td></tr>
+<tr><td>segment_circle_intersections(a,b,circle)</td><td>vector&lt;Point&gt;。a から b への順に0〜2点。a=b も使用可</td></tr>
+<tr><td>circle_intersections(first,second)</td><td>CircleIntersection。通常は points に0〜2点。2点の順序は保証しない</td></tr>
+</tbody></table>
+<p>円板の内部が重なっていても、境界が交わらなければ交点は空です。接点は重複させず1点を返します。同心・同半径の正半径の円は交点が無限にあるため <code>coincident=true</code>、<code>points</code> は空です。中心と半径の完全な一致で判定します。同じ半径0の円同士は <code>coincident=false</code>、中心1点を返します。</p>
+<p>直線との交点は中心の射影を求め、残りの距離から両方向へ進みます。線分版は交点の線分上の位置を絞り込みます。円同士は中心線上の共通弦の足と高さから構成し、外接・内接を先に処理します。平方根の微小な負値は0へ丸めます。</p>
+<h2>共通部分の面積</h2>
+<pre><code>cp_geometry::Circle first({0,0}, 2), second({2,0}, 2);
+auto disk_area = cp_geometry::circle_overlap_area(first, second);
+
+std::vector&lt;cp_geometry::Point&gt; polygon{
+    {-2,-2}, {2,-2}, {2,0}, {0,0}, {0,2}, {-2,2}
+};
+auto polygon_area = cp_geometry::circle_polygon_intersection_area(
+    cp_geometry::Circle({0,0}, 1), polygon); // 3π/4</code></pre>
+<p><code>circle_overlap_area(first,second)</code> は円板同士の共通面積を O(1) で返します。離れている場合は0、包含関係なら小さい円の面積です。それ以外は、共通弦で区切られる2つの弓形の面積を足します。角度は <code>atan2</code> で求め、逆余弦の定義域からはみ出す問題を避けます。</p>
+<p><code>circle_polygon_intersection_area(circle,polygon)</code> は自己交差しない多角形を受け取り、向きによらず非負の面積を O(N) 時間・O(1) 追加メモリで返します。凹多角形も対応します。頂点数が3未満、または円の半径が0なら0です。自己交差多角形や複数の外周・穴を表す入力はこの API の対象外です。</p>
+<p>各辺を円との交点で高々3区間に分けます。円の内側の区間は中心との符号付き三角形面積、外側の区間は符号付き扇形面積として加え、最後に絶対値を取ります。区間の切断位置は固定長配列へ保存するので、辺ごとの動的メモリ確保はありません。辺の寄与の総和には補償加算を使います。接するだけの辺は外側として扱います。</p>
+<h2>接線</h2>
+<p><code>tangent_points(circle,point)</code> は点を通る接線の円上の接点を0〜2点で返します。円の内部なら空、境界なら1点、外部なら2点です。半径0では接点集合として中心1点を返します。</p>
+<p><code>common_tangents(first,second)</code> は <code>CircleTangents</code> を返します。有限本なら <code>tangents</code> の各要素が <code>first_contact</code>、<code>second_contact</code>、<code>line</code> を持ちます。内公接線・外公接線を含め、重複した直線は除去します。返却順序は保証しません。同心・同半径の円は半径0も含めて接線が無限にあるので <code>coincident=true</code>、配列は空です。異なる2つの点円なら、その2点を通る直線1本です。</p>
+<h2>数値の前提</h2>
+<p>座標は <code>long double</code> です。接触と線分端点の判定には絶対距離 <code>eps=1e-12</code> を使い、この程度の距離のずれは接触と同一視されます。面積関数の包含・分割判定にはこの許容幅を加えません。極端に大きい・小さい座標、ほぼ一直線の外接円、接する直前の非常に小さい共通面積では桁落ちが起きます。入力規模と必要精度に合わせて座標を調整してください。Circle のメンバを作成後に書き換える場合も、有限座標・半径0以上を保つ必要があります。</p>
+<h2>検証と参照問題</h2>
+<p><code>verify/circle.test.cpp</code> で、解析的に分かる円・四角形・凹多角形の面積、時計回りへの反転、平行移動、内接・外接・包含・半径0を確認します。固定シードの1,500組で交点の円周上の条件と接線の垂直条件を検証し、円同士80組と凹多角形55組の面積を独立した縦方向の数値積分と比較します。INT / IN / OUT / ON / min / max / all / rep が定義された状態で include し、マクロが保持されることも調べます。</p>
+<p>仕様とサンプルの参照先は AOJ の <a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_D&amp;lang=ja">円と直線の交点</a>、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_E&amp;lang=ja">円と円の交点</a>、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_F&amp;lang=ja">接点</a>、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_G&amp;lang=ja">共通接線</a>、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_H&amp;lang=ja">円と多角形の共通部分</a>、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_7_I&amp;lang=ja">円と円の共通部分</a>です。実装は本ライブラリ用に記述しました。H / I のサンプルはローカルテストに含めていますが、外部ジャッジへの提出結果を示すものではありません。</p>

@@ -6,11 +6,12 @@
 <pre><code>#include "geometry/geometry.hpp"
 int main() {
     cp_geometry::ConvexPolygon p({{0,0},{2,0},{2,2},{0,2}});
-    return p.contains({1,1}) == cp_geometry::IN ? 0 : 1;
+    return p.contains({1,1}) == cp_geometry::Location::inside ? 0 : 1;
 }</code></pre>
 <p>コンパイル例：<code>g++ -std=c++17 -O2 -iquote /path/to/cp_library main.cpp</code>。元フォルダには <code>vector</code> という作業ファイルがあるため、標準ヘッダ探索にも影響する <code>-I</code> の代わりに <code>-iquote</code> を使います。</p>
 <h2>ローカル検証</h2>
-<pre><code>python3 tools/test.py --sanitize
+<pre><code>python3 tools/check_headers.py
+python3 tools/test.py --sanitize
 python3 tools/build_docs.py
 python3 tools/check_docs.py
 python3 -m http.server 8000 --directory _site</code></pre>

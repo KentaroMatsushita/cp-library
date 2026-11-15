@@ -11,7 +11,8 @@ ROOT_FILES = ('my_template.hpp', 'cht.cpp', 'monge_rowmin.cpp', 'monotone-minima
               'Wavelet_Matrix_xor.cpp')
 SUPPORT_FILES = ('ac-library/atcoder/maxflow', 'ac-library/atcoder/maxflow.hpp',
                  'ac-library/atcoder/internal_queue', 'ac-library/atcoder/internal_queue.hpp',
-                 'ac-library/atcoder/LICENSE')
+                 'ac-library/atcoder/LICENSE',
+                 'geometry/detail/macro_push.hpp', 'geometry/detail/macro_pop.hpp')
 
 def sources():
     result = []
@@ -38,7 +39,7 @@ def catalog():
 
 def fingerprint():
     paths = sources() + list(SUPPORT_FILES) + [p.relative_to(ROOT).as_posix() for p in (ROOT / 'verify').glob('*.test.cpp')]
-    paths += ['tools/test.py', 'tools/library.py']
+    paths += ['tools/test.py', 'tools/library.py', 'tools/check_headers.py']
     h = hashlib.sha256()
     for path in sorted(paths):
         h.update(path.encode() + b'\0' + (ROOT / path).read_bytes() + b'\0')

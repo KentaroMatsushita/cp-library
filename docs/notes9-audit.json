@@ -1,0 +1,23 @@
+{
+  "tree/HLD.cpp": [
+    "Heavy-Light Decomposition・森対応",
+    "重い子を先に並べ、経路を O(log N) 個の連続区間へ分解します。LCA、祖先、距離、経路復元、経路上の jump を提供。前処理は反復走査のため長いパス状の木でも再帰スタックを消費しません。",
+    "前処理 O(N)、LCA/祖先/jump O(log N)、経路分解 O(log N) 区間、メモリ O(N)",
+    "C++17 で単独 include 可。入力は単純無向森。根はコンストラクタの第2引数で各成分1つずつ指定し、省略時は各成分の最小番号を選びます。隣接リスト順を書き換えます。クエリの2頂点は同一成分。la の k<0 または深さ超過、jump の範囲外は -1。query の q1/q2 版は非可換集約の向きを区別。root[v] は属する成分の根。値付き build の末尾の旧 root 引数は互換用で、根の指定はコンストラクタで行います。",
+    "#include \"tree/HLD.cpp\"\nstd::vector<std::vector<int>> g(n); // 無向森を追加\nHLDecomposition h(g); h.build();\nauto vertex = h.jump(s,t,k);"
+  ],
+  "tree/tree_compressing.cpp": [
+    "LCA を追加した木の圧縮・Virtual Tree",
+    "対象頂点を Euler 順に並べ、隣接する対象の LCA と各成分の根を追加し、祖先スタックで圧縮後の森を構築します。HLD の複製を除去して共通実装を参照するため、HLD.cpp・tree_util.hpp と同時に利用できます。",
+    "対象 K 個に対し O(K log K + K log N)、HLD 前処理 O(N)、追加メモリ O(K)",
+    "C++17 で単独 include 可。入力は std::vector<std::vector<int>> の単純無向森。make(nodes) は nodes を並べ替えて LCA と成分の根を追加します。戻り値は {元頂点番号の列, その添字を頂点番号とする無向森}。空集合・重複した対象・複数成分に対応。元の隣接順を書き換えます。lca の2頂点は同一成分。",
+    "#include \"tree/tree_compressing.cpp\"\nLCA_Tree tree(g);\nauto [vertices,forest] = tree.make(selected);"
+  ],
+  "data_structure/Wavelet_Matrix.cpp": [
+    "Wavelet Matrix・小さい k 個の和",
+    "ビットごとに安定分割した列と rank 辞書を持ち、区間の順位・値域個数・前後の値を求めます。sum 版は各層の累積和で小さい k 個・大きい k 個の和を返します。通常テンプレートと CPU 固有の BMI2 命令への依存を除去しました。",
+    "構築 O(N lg)、クエリ O(lg)、メモリ O(N lg)",
+    "GCC/Clang の C++17 で単独 include 可。lg は 1..numeric_limits<T>::digits、値は非負で lg bit に収まる整数。範囲外の値は例外。区間 [l,r)、kth は0始まりで k<r-l、bottom_k_sum/top_k_sum の k は個数で 0..r-l。set 後は build を再実行してください。sum 版は build2 でも再構築可能。和は sum_t 内に収まること。空配列に対応。prev_value/next_value の該当なしは T(-1) なので、符号なし型では有効な最大値と区別できない場合があります。内部ビット列は WaveletMatrixBitVector 名へ整理。",
+    "#include \"data_structure/Wavelet_Matrix.cpp\"\nWaveletMatrix<int,30> w(a); auto value=w.kth_smallest(l,r,k);\nWaveletMatrix_sum<int,long long,30> sums(n);\nfor(int i=0;i<n;++i) sums.set(i,a[i]);\nsums.build(); auto total=sums.bottom_k_sum(l,r,k);"
+  ]
+}

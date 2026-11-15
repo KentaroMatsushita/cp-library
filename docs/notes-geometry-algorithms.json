@@ -1,0 +1,9 @@
+{
+  "geometry/algorithms.hpp": [
+    "最近点対・Minkowski 和・多角形重心",
+    "最近点対、凸集合の Minkowski 和、多角形の面積重心、線分間距離、直線に関する鏡映。",
+    "最近点対 O(N log N) 時間・O(N) メモリ。厳密凸包同士の Minkowski 和 O(N+M)、点集合からは O(N log N + M log M)。面積重心 O(N)、線分間距離・鏡映 O(1)。",
+    "C++17・cp_geometry 名前空間。closest_pair は2点未満で nullopt、添字は元の配列を参照。minkowski_sum_convex は厳密な反時計回り凸包（0〜2点も可）を要求。重心は正面積の単純多角形。eps と浮動小数点精度の制約に注意。",
+    "#include \"geometry/algorithms.hpp\"\nstd::vector<cp_geometry::Point> p{{0,0},{3,4},{1,0}};\nauto pair = cp_geometry::closest_pair(p);\nauto sum = cp_geometry::minkowski_sum(p,p);\nauto centroid = cp_geometry::polygon_centroid(sum);"
+  ]
+}

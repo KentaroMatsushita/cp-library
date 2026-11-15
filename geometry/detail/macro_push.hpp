@@ -1,0 +1,23 @@
+// Intentionally no include guard: every public header needs a matching push/pop.
+#pragma push_macro("INT")
+#undef INT
+#pragma push_macro("IN")
+#undef IN
+#pragma push_macro("OUT")
+#undef OUT
+#pragma push_macro("ON")
+#undef ON
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
+#pragma push_macro("all")
+#undef all
+#pragma push_macro("rep")
+#undef rep
+#pragma push_macro("eps")
+#undef eps
+#pragma push_macro("sign")
+#undef sign
+#pragma push_macro("near")
+#undef near

@@ -878,7 +878,11 @@ template <typename mint> struct FormalPowerSeries : vector<mint> {
     FPS pow(int64_t k, int deg = -1) const {
         const int n = (int)this->size();
         if(deg == -1) deg = n;
-        if(k == 0) { FPS one(deg, mint(0)); if(deg) one[0] = 1; return one; }
+        if(k == 0) {
+            FPS one(deg, mint(0));
+            if(deg) one[0] = 1;
+            return one;
+        }
         for(int i = 0; i < n; i++) {
             if((*this)[i] != mint(0)) {
                 if(__int128(i) * k >= deg) return FPS(deg, mint(0));

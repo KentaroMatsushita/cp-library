@@ -1,0 +1,23 @@
+{
+  "geometry/base.hpp": [
+    "平面幾何の点・直線・線分・多角形の基本",
+    "Point、Line、内積・外積、回転、射影、線分交差と距離、符号付き面積、一般単純多角形の内外判定。外部の競プロテンプレートを必要としません。",
+    "点・直線・線分の基本操作 O(1)、多角形の面積・一般内外判定 O(N)。",
+    "C++17、cp_geometry 名前空間、Real=long double、eps=1e-12。Location は scoped enum（outside=0, boundary=1, inside=2）で、入力関数 IN/OUT と衝突しない。Line は有限な異なる2点が必要。面積は原点を平行移動してから加算し、大きな共通オフセットによる桁落ちを軽減する。絶対誤差を使う浮動小数点幾何で、NaN・無限大・極端なスケールは対象外。",
+    "#include \"geometry/base.hpp\"\nnamespace cg=cp_geometry;\nstd::vector<cg::Point> p{{0,0},{2,0},{0,2}};\nauto where=cg::contains(p,{0.5L,0.5L});\nassert(where==cg::Location::inside);\nauto area=cg::polygon_area(p); // 2"
+  ],
+  "geometry/convex.hpp": [
+    "凸包・凸多角形の対数時間クエリ",
+    "凸包、凸多角形の内外判定・指定方向の最遠点・直線との境界交点、回転キャリパーによる直径、凸切断。",
+    "点集合からの構築 O(N log N)。既存の厳密凸包からの from_convex_hull は O(N)。内外判定・support・直線交点は O(log H)、直径・切断 O(H)。",
+    "任意の点集合は ConvexPolygon(points) に渡す。from_convex_hull は既に単純な厳密凸包である入力専用（CW/CCWどちらも可、途中の共線点・閉じ点の重複なし）。凸包の検証は呼出側の責任。0〜2点の退化凸包に対応。判定結果は Location::inside/boundary/outside。方向0の support は任意の頂点、空凸包の support は例外。",
+    "#include \"geometry/convex.hpp\"\nnamespace cg=cp_geometry;\ncg::ConvexPolygon p({{0,0},{4,0},{4,3},{0,3}});\nauto where=p.contains({1,1}); // cg::Location::inside\nauto hit=p.line_intersections(cg::Line({-1,1},{5,1}));\nauto indexed=cg::ConvexPolygon::from_convex_hull(p.vertices());"
+  ],
+  "geometry/halfplane.hpp": [
+    "半平面交差（ax + by <= c）",
+    "HalfPlane{a,b,c} による閉不等式 ax+by<=c の共通部分を求める。空・非有界・有界多角形・有界退化領域を区別する一般版と、明示した矩形内の版。従来の有向直線による入力も利用できる。",
+    "矩形内 O(N log N)。一般版は期待 O(N log N)、最悪 O(N²)。メモリ O(N)。",
+    "境界を含む <= 制約。係数は有限。a=b=0,c>=0 は全平面、c<0 は矛盾。正の係数倍に依存しないよう法線を正規化する。一般版の DEGENERATE は witness のみ返し、線分の端点は返さない。矩形版は空・点・線分で空配列を返す。ほぼ平行な法線を eps で同一視する数値方針。非常に遠い境界や巨大座標の単位方向を表現できない入力では例外や精度低下があり、座標の平行移動・スケーリングが必要。",
+    "#include \"geometry/halfplane.hpp\"\nnamespace cg=cp_geometry;\nstd::vector<cg::HalfPlane> h{{-1,0,0},{0,-1,0},{1,0,4},{0,1,3}};\n// 0<=x<=4, 0<=y<=3\nauto region=cg::half_plane_intersection(h);\nassert(region.kind==cg::RegionKind::POLYGON);\nauto area=cg::polygon_area(region.polygon); // 12"
+  ]
+}

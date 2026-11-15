@@ -1,9 +1,108 @@
 {
- "verify/short.test.cpp":["others/Grid.cpp","others/2D_calculations.cpp","data_structure/BFS_restore.cpp","tree/centroid.cpp","tree/EulerTour.cpp","tree/EulerTour_Edgebase.cpp","tree/diameter_weighted.cpp","data_structure/hash_map_gnu.cpp","math/binom.cpp","math/fft.cpp","graph/TSP.cpp","math/mobius_function_table.cpp","math/fast_gcd.cpp","data_structure/BIT01.cpp","data_structure/inversion_number.cpp","math/and_convolution.cpp","math/or_convolution.cpp","math/xor_convolution.cpp"],
- "verify/additional.test.cpp":["graph/SectionGraph.cpp","graph/dijkstra.cpp","graph/get_cycle.cpp","graph/MinCostFlow.cpp","data_structure/doubling.cpp","data_structure/2D_SparseTable.cpp","data_structure/dynamic_li_chao_tree.cpp","data_structure/treap.cpp","others/fastset.cpp","others/adjacent_manager.cpp","others/interval_manager.cpp","others/nd_for.cpp","math/kth_root.cpp","math/extgcd.cpp","math/prime_sieve.cpp","math/fft_aribitary_mod.cpp","linear_algebra/gauss_jordan.cpp","linear_algebra/F2Matrix.cpp","tree/Rerooting.cpp","math/matrix_square.cpp","others/random.cpp","data_structure/UnionFind_undo_coloring.cpp"],
- "verify/template.test.cpp":["my_template.hpp"],
- "verify/modint1.test.cpp":["modular/modint1.cpp"],
- "verify/modint2.test.cpp":["modular/modint2.cpp"],
- "verify/montgomery.test.cpp":["modular/mod1000000007.cpp","modular/mod998244353.cpp"],
- "verify/modarb.test.cpp":["modular/mod_arbitary.cpp"]
+  "verify/short.test.cpp": [
+    "others/Grid.cpp",
+    "others/2D_calculations.cpp",
+    "data_structure/BFS_restore.cpp",
+    "tree/centroid.cpp",
+    "tree/EulerTour.cpp",
+    "tree/EulerTour_Edgebase.cpp",
+    "tree/diameter_weighted.cpp",
+    "data_structure/hash_map_gnu.cpp",
+    "math/binom.cpp",
+    "math/fft.cpp",
+    "graph/TSP.cpp",
+    "math/mobius_function_table.cpp",
+    "math/fast_gcd.cpp",
+    "data_structure/BIT01.cpp",
+    "data_structure/inversion_number.cpp",
+    "math/and_convolution.cpp",
+    "math/or_convolution.cpp",
+    "math/xor_convolution.cpp"
+  ],
+  "verify/additional.test.cpp": [
+    "graph/SectionGraph.cpp",
+    "graph/dijkstra.cpp",
+    "graph/get_cycle.cpp",
+    "graph/MinCostFlow.cpp",
+    "data_structure/doubling.cpp",
+    "data_structure/2D_SparseTable.cpp",
+    "data_structure/dynamic_li_chao_tree.cpp",
+    "data_structure/treap.cpp",
+    "others/fastset.cpp",
+    "others/adjacent_manager.cpp",
+    "others/interval_manager.cpp",
+    "others/nd_for.cpp",
+    "math/kth_root.cpp",
+    "math/extgcd.cpp",
+    "math/prime_sieve.cpp",
+    "math/fft_aribitary_mod.cpp",
+    "linear_algebra/gauss_jordan.cpp",
+    "linear_algebra/F2Matrix.cpp",
+    "tree/Rerooting.cpp",
+    "math/matrix_square.cpp",
+    "others/random.cpp",
+    "data_structure/UnionFind_undo_coloring.cpp"
+  ],
+  "verify/template.test.cpp": [
+    "my_template.hpp"
+  ],
+  "verify/modint1.test.cpp": [
+    "modular/modint1.cpp"
+  ],
+  "verify/modint2.test.cpp": [
+    "modular/modint2.cpp"
+  ],
+  "verify/montgomery.test.cpp": [
+    "modular/mod1000000007.cpp",
+    "modular/mod998244353.cpp"
+  ],
+  "verify/modarb.test.cpp": [
+    "modular/mod_arbitary.cpp"
+  ],
+  "verify/circle.test.cpp": [
+    "geometry/circle.hpp",
+    "geometry/base.hpp"
+  ],
+  "verify/geometry_algorithms.test.cpp": [
+    "geometry/algorithms.hpp",
+    "geometry/base.hpp",
+    "geometry/convex.hpp"
+  ],
+  "verify/audit.test.cpp": [
+    "tree/HLD.cpp",
+    "tree/tree_compressing.cpp",
+    "tree/tree_util.hpp",
+    "data_structure/Wavelet_Matrix.cpp"
+  ],
+  "verify/geometry.test.cpp": [
+    "geometry/base.hpp",
+    "geometry/convex.hpp",
+    "geometry/halfplane.hpp"
+  ],
+  "verify/halfplane.test.cpp": [
+    "geometry/halfplane.hpp",
+    "geometry/base.hpp",
+    "geometry/convex.hpp"
+  ],
+  "verify/geometry_compat.test.cpp": [
+    "geometry/geometry.hpp",
+    "geometry/base.hpp",
+    "geometry/convex.hpp",
+    "geometry/halfplane.hpp",
+    "geometry/circle.hpp",
+    "geometry/algorithms.hpp"
+  ],
+  "verify/geometry_compat_reverse.test.cpp": [
+    "geometry/geometry.hpp",
+    "geometry/base.hpp",
+    "geometry/convex.hpp",
+    "geometry/halfplane.hpp",
+    "geometry/circle.hpp",
+    "geometry/algorithms.hpp"
+  ],
+  "verify/geometry_review.test.cpp": [
+    "geometry/base.hpp",
+    "geometry/convex.hpp",
+    "geometry/halfplane.hpp"
+  ]
 }

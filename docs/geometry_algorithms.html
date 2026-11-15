@@ -1,0 +1,34 @@
+<h2>最近点対</h2>
+<p><code>closest_pair(points)</code> は元の配列における異なる2点の添字 <code>first, second</code> と、距離の2乗 <code>squared_distance</code> を <code>std::optional&lt;ClosestPairResult&gt;</code> で返します。2点未満なら <code>std::nullopt</code>、同じ座標が複数ある場合は距離0です。同距離の組が複数あるときの選択は任意です。</p>
+<p>x 座標で二分し、左右を y 座標順にマージしながら境界付近の点を調べます。各段階のマージと帯の走査は線形で、全体で O(N log N) 時間、O(N) 追加メモリです。入力を変更しません。NaN・無限大の座標は例外です。座標差と距離の2乗が <code>Real</code> に収まる範囲で使用してください。</p>
+<pre><code>#include "geometry/algorithms.hpp"
+std::vector&lt;cp_geometry::Point&gt; points{{0,0}, {3,4}, {1,0}};
+auto nearest = cp_geometry::closest_pair(points);
+if (nearest) {
+    auto i = nearest-&gt;first, j = nearest-&gt;second;
+    auto distance = std::sqrt(nearest-&gt;squared_distance);
+}</code></pre>
+<h2>Minkowski 和</h2>
+<p>凸集合 A, B の Minkowski 和は、A の点 a と B の点 b を使って表せる a+b 全体です。障害物と移動物体の接触判定、凸集合の移動可能範囲、2つの凸包から選んだ点の和を扱う問題に使えます。</p>
+<table><thead><tr><th>API</th><th>入力</th><th>時間</th></tr></thead><tbody>
+<tr><td>minkowski_sum_convex(a,b)</td><td>厳密な反時計回り凸包2個</td><td>O(N+M)</td></tr>
+<tr><td>minkowski_sum(a,b)</td><td>任意の点集合2個。まず各凸包を作る</td><td>O(N log N + M log M)</td></tr>
+</tbody></table>
+<p><code>minkowski_sum_convex</code> は末尾の始点重複や連続する一直線上の中間頂点を含まない反時計回りの凸包を受け取ります。開始頂点は自由です。0点・1点・2点の退化凸包も扱います。多角形の凸性は検証しないため、不確かな入力は <code>minkowski_sum</code> に渡してください。</p>
+<p>両方の辺列を偏角順にマージします。返す頂点列は反時計回りで、一直線上の中間頂点を省き、(y,x) の辞書順最小頂点から始まります。片方が空なら空です。点同士なら1点、平行な線分同士なら線分になります。</p>
+<pre><code>auto a = cp_geometry::convex_hull(points_a);
+auto b = cp_geometry::convex_hull(points_b);
+auto sum = cp_geometry::minkowski_sum_convex(a, b);
+// A-B が必要なら、b の各点を -1 倍してから渡す。
+for (auto&amp; p : b) p = p * -1;
+auto difference = cp_geometry::minkowski_sum_convex(a, b);</code></pre>
+<h2>面積重心・線分間距離・鏡映</h2>
+<table><thead><tr><th>API</th><th>結果と前提</th><th>時間</th></tr></thead><tbody>
+<tr><td>polygon_centroid(polygon)</td><td>単純多角形の面積重心。時計回りも可。頂点数3未満、または面積の2倍の絶対値が eps 以下なら例外。</td><td>O(N)</td></tr>
+<tr><td>segment_segment_distance(a,b,c,d)</td><td>閉線分 ab と cd の距離。端点が等しい点線分も可。交差・接触時は0。</td><td>O(1)</td></tr>
+<tr><td>reflection(line,p)</td><td>無限直線 line に関する点 p の鏡映。</td><td>O(1)</td></tr>
+</tbody></table>
+<p>重心は最初の頂点を原点とした符号付き三角形の面積加重平均から求めます。頂点の単純平均とは異なります。入力は穴のない単純多角形で、末尾に始点を重複させる必要はありません。自己交差多角形の領域重心は対象外です。浮動小数点の精度と絶対誤差 eps に関する制約は基礎幾何と同じです。</p>
+<h2>参照・検証</h2>
+<p>問題設定は <a href="https://judge.yosupo.jp/problem/closest_pair">Library Checker: Closest Pair of Points</a>、凸 Minkowski 和の辺列マージは <a href="https://doc.cgal.org/latest/Minkowski_sum_2/index.html">CGAL: 2D Minkowski Sums</a> の解説を参照し、実装は独立に作成しました。外部ジャッジの AC を主張するものではありません。</p>
+<p><code>verify/geometry_algorithms.test.cpp</code> で最近点対3000ケースを全点対、Minkowski 和3000ケースを全頂点対の和の凸包と比較します。重複点、同じ x 座標、空集合、点、平行線分、開始頂点の巡回移動、大きな平行移動、時計回り三角形、凹多角形の重心も確認します。</p>
