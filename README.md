@@ -34,6 +34,28 @@ int main() {
 
 判定定数の旧 `IN/ON/OUT` は入力関数と競合するため廃止し、`Location::inside/boundary/outside` に変更しました。普段の `my_template.hpp` と両方の include 順でテストしています。座標は long double、絶対誤差 1e-12。精度・退化・前提条件は各説明ページを参照してください。
 
+## Voronoi / Delaunay
+
+```cpp
+#include "geometry/voronoi.hpp"
+#include "geometry/power_diagram.hpp"
+namespace cg=cp_geometry;
+
+std::vector<cg::Point> sites{{-1,0},{1,0},{0,2}};
+cg::VoronoiDiagram diagram(sites);
+auto cells=diagram.cells({-5,-5},{5,5}); // 通常の全セル O(N log N)
+auto largest=cg::largest_empty_circle_in_box(diagram,{-5,-5},{5,5});
+for(const auto& edge:diagram.edges()) {
+    auto clipped=edge.clip({-5,-5},{5,5}); // 線分・半直線・直線に対応
+}
+std::vector<cg::PowerSite> weighted{{{-1,0},4},{{1,0},0}};
+auto cell=cg::power_cell(weighted,0,{-5,-5},{5,5}); // 重み付き1セル O(N log N)
+```
+
+通常の Delaunay/Voronoi は O(N log N) 時間・O(N) メモリ。重複点の代表添字を保持し、共線・共円にも対応します。Power Diagram の距離は `|p-site|²-weight` で、円周までの距離による図ではありません。Power の全セルは O(N² log N) です。
+
+最大空円の領域制約は **中心の位置だけ** に適用します。円板全体が領域内に収まる最大内接円とは異なります。矩形版 O(N log N)、M頂点の単純多角形版 O(NM + N log N)。関連問題は Galaxy War（5th UCup Wuhan H）、Panda Preserve（WF2018 G）、Euclidean MST（Library Checker）などです。通常の頂点・交点座標は long double の近似値です。詳細は各ページを参照してください。
+
 ## 検証・サイト生成
 
 必要環境は Python 3.10+ と GCC/Clang の C++17。追加の Python パッケージや外部ジャッジ接続は不要です。一部の既存 SIMD ライブラリのテストには AVX2/BMI2/POPCNT が必要です。

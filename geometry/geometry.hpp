@@ -5,3 +5,6 @@
 #include "halfplane.hpp"
 #include "circle.hpp"
 #include "algorithms.hpp"
+#include "delaunay.hpp"
+#include "voronoi.hpp"
+#include "power_diagram.hpp"

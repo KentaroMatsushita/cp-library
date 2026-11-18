@@ -90,7 +90,10 @@
     "geometry/convex.hpp",
     "geometry/halfplane.hpp",
     "geometry/circle.hpp",
-    "geometry/algorithms.hpp"
+    "geometry/algorithms.hpp",
+    "geometry/delaunay.hpp",
+    "geometry/voronoi.hpp",
+    "geometry/power_diagram.hpp"
   ],
   "verify/geometry_compat_reverse.test.cpp": [
     "geometry/geometry.hpp",
@@ -98,7 +101,10 @@
     "geometry/convex.hpp",
     "geometry/halfplane.hpp",
     "geometry/circle.hpp",
-    "geometry/algorithms.hpp"
+    "geometry/algorithms.hpp",
+    "geometry/delaunay.hpp",
+    "geometry/voronoi.hpp",
+    "geometry/power_diagram.hpp"
   ],
   "verify/geometry_review.test.cpp": [
     "geometry/base.hpp",
@@ -110,5 +116,25 @@
   ],
   "verify/modint1_compat_reverse.test.cpp": [
     "modular/modint1.cpp"
+  ],
+  "verify/delaunay.test.cpp": [
+    "geometry/delaunay.hpp",
+    "geometry/base.hpp"
+  ],
+  "verify/voronoi.test.cpp": [
+    "geometry/voronoi.hpp",
+    "geometry/delaunay.hpp",
+    "geometry/halfplane.hpp"
+  ],
+  "verify/voronoi_review.test.cpp": [
+    "geometry/voronoi.hpp",
+    "geometry/delaunay.hpp",
+    "geometry/halfplane.hpp"
+  ],
+  "verify/power_diagram.test.cpp": [
+    "geometry/power_diagram.hpp",
+    "geometry/halfplane.hpp",
+    "geometry/circle.hpp",
+    "geometry/base.hpp"
   ]
 }

@@ -47,5 +47,14 @@
   ".vscode/geometry/Points.cpp": {
     "contract": "cp_integer_geometry 名前空間。T の既定値は long long。標準ヘッダ・ll・using namespace std は呼出側で不要。整数積のオーバーフローは呼出側で制限する。偏角同値の点の順序は未規定。",
     "usage": "#include \".vscode/geometry/Points.cpp\"\nstd::vector<cp_integer_geometry::Point<>> points{{1,0},{0,1}};\nstd::sort(points.begin(),points.end());"
+  },
+  "geometry/delaunay.hpp": {
+    "detail": "delaunay.html"
+  },
+  "geometry/voronoi.hpp": {
+    "detail": "voronoi.html"
+  },
+  "geometry/power_diagram.hpp": {
+    "detail": "power_diagram.html"
   }
 }

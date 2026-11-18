@@ -1,0 +1,9 @@
+{
+  "geometry/voronoi.hpp": [
+    "Voronoi 図・セル・最大空円",
+    "通常のユークリッド Voronoi 図を Delaunay 三角形分割の双対から構成します。有限辺・半直線・直線、矩形で切ったセル、矩形・単純多角形に中心を置く最大空円を求めます。",
+    "図の構築 O(N log N)・メモリ O(N)。矩形内の全セル O(N log N)、d 個の隣接点を持つ1セル O(d log d)。辺の矩形切断・線分との交差 O(1)。最大空円は矩形 O(N log N)、M頂点の単純多角形 O(NM + N log N)。",
+    "自己完結した C++17 ヘッダ、cp_geometry 名前空間。sites は入力順。重複点は完全一致でまとめ、小さい入力添字がセルを所有する。重複した非所有者の cell は空。edges は元の入力添字を参照する。共円で生じる長さ0の双対辺は省く。頂点・交点座標は long double の近似値。最大空円は中心だけを指定領域に制限し、円板全体の包含を要求しない。通常のセルと Power Diagram は別API。",
+    "#include \"geometry/voronoi.hpp\"\nnamespace cg=cp_geometry;\nstd::vector<cg::Point> sites{{-1,0},{1,0},{0,2}};\ncg::VoronoiDiagram diagram(sites);\nauto cells=diagram.cells({-5,-5},{5,5});\nauto area=cg::polygon_area(cells[0]);\nfor(const auto& edge:diagram.edges()) { auto segment=edge.clip({-5,-5},{5,5}); }\nauto empty=cg::largest_empty_circle_in_box(diagram,{-5,-5},{5,5});"
+  ]
+}

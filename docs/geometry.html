@@ -41,3 +41,5 @@ auto clipped=cg::half_plane_intersection(constraints, cg::Point{-10,-10}, cg::Po
 <p><a href="https://cp-algorithms.com/geometry/halfplane-intersection.html">cp-algorithms: Half-plane intersection</a> のソートと deque による考え方、<a href="https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=CGL_3_C">AOJ CGL_3_C</a> の内外判定を参考にしました。実装はこのライブラリ用です。円と最近点対等の参考資料は各モジュールに記載しています。</p>
 <h2>検証</h2>
 <p>内外判定・support・直線交点は全辺・全頂点の素朴解、半平面交差は逐次凸切断と比較します。係数の正の拡大縮小、平行・逆向き・角度0をまたぐ方向、退化、巨大な共通平行移動、空集合も検証します。外部ジャッジACを示すものではありません。</p>
+<h2>Voronoi / Delaunay / Power Diagram</h2>
+<p>点集合を最も近いサイトの領域に分ける通常の Voronoi 図と、距離の二乗から重みを引く Power Diagram を追加しました。通常版は Delaunay の双対によって全体を O(N log N) で構築し、非有界な辺と矩形内のセルを取得できます。</p><ul><li><a href="geometry_delaunay_hpp-018f8fbf.html">geometry/delaunay.hpp</a></li><li><a href="geometry_voronoi_hpp-ad48c52d.html">geometry/voronoi.hpp</a></li><li><a href="geometry_power_diagram_hpp-f1ada431.html">geometry/power_diagram.hpp</a></li></ul><p>Voronoi 版では指定した矩形・単純多角形に中心を置く最大空円も求められます。Power 版は円を重み付きサイトへ変換でき、Universal Cup の Galaxy War 型の領土面積を扱えます。重み付きの全図はセルを独立に計算する O(N² log N) 版で、通常の図と計算量が異なります。</p>

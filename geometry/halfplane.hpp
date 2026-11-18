@@ -54,7 +54,8 @@ inline std::vector<Point> half_plane_intersection(std::vector<Line> lines,
     if(q.size()<3 || sign(cross(q.front().direction(),q.back().direction()))==0) return {};
     std::vector<Point> result;
     for(std::size_t i=0;i<q.size();++i) result.push_back(meet(q[i],q[(i+1)%q.size()]));
-    if(sign(area2(result))<=0) return {};
+    // eps is used for distance/angle predicates, not as an area cutoff.
+    if(!(area2(result)>0)) return {};
     return result;
 }
 enum class RegionKind { EMPTY, UNBOUNDED, POLYGON, DEGENERATE };
@@ -124,7 +125,7 @@ inline HalfPlaneRegion half_plane_intersection(std::vector<Line> lines) {
         return {RegionKind::DEGENERATE,feasible,{}};
     std::vector<Point> result;
     for(std::size_t i=0;i<q.size();++i) result.push_back(meet(q[i],q[(i+1)%q.size()]));
-    if(sign(area2(result))<=0) return {RegionKind::DEGENERATE,feasible,{}};
+    if(!(area2(result)>0)) return {RegionKind::DEGENERATE,feasible,{}};
     return {RegionKind::POLYGON,feasible,std::move(result)};
 }
 

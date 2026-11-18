@@ -7,7 +7,8 @@ import tempfile
 
 ROOT=Path(__file__).resolve().parents[1]
 headers=['geometry/base.hpp','geometry/convex.hpp','geometry/halfplane.hpp',
-         'geometry/circle.hpp','geometry/algorithms.hpp','geometry/geometry.hpp',
+         'geometry/circle.hpp','geometry/algorithms.hpp','geometry/delaunay.hpp',
+         'geometry/voronoi.hpp','geometry/power_diagram.hpp','geometry/geometry.hpp',
          '.vscode/geometry/geometry.hpp','.vscode/geometry/Points.cpp',
          'tree/HLD.cpp','tree/tree_compressing.cpp','tree/tree_util.hpp','data_structure/Wavelet_Matrix.cpp',
          'modular/modint1.cpp']

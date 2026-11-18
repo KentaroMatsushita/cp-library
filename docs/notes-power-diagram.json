@@ -1,0 +1,9 @@
+{
+  "geometry/power_diagram.hpp": [
+    "Power Diagram・重み付き Voronoi セル",
+    "距離の二乗から重みを引く Power Diagram のセルを、半平面交差で構成します。円からの重み変換、指定矩形内の全セル、円集合の外側にある担当領域の面積も求められます。",
+    "矩形内の1セル O(N log N)・追加メモリ O(N)。矩形なしの1セルは期待 O(N log N)、最悪 O(N²)。全セルは O(N² log N)、返却領域の保存を含むメモリ上界 O(N²)。",
+    "自己完結した C++17 ヘッダ、cp_geometry 名前空間。PowerSite{point,weight} の値は |query-point|²-weight。重みは負も可、全て有限値。同じ位置は大きい重みが優先、同じ位置・同じ重みは小さい入力添字のみセルを所有。矩形内版は正面積の反時計回り多角形、空・点・線分は空配列。矩形なし版は HalfPlaneRegion。円周までのユークリッド距離を使う Voronoi 図とは異なります。",
+    "#include \"geometry/power_diagram.hpp\"\nstd::vector<cp_geometry::PowerSite> sites{{{-1,0},4},{{1,0},0}};\nauto cell = cp_geometry::power_cell(sites, 0, {-2,-2}, {2,2}); // x<=1 の領域、面積12\nauto cells = cp_geometry::power_diagram(sites, {-2,-2}, {2,2});\nstd::vector<cp_geometry::Circle> circles{{{0,0},1},{{4,0},2}};\nauto area = cp_geometry::circle_territory_area(circles, 0, {-10,-10}, {10,10});"
+  ]
+}

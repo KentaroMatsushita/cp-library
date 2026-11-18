@@ -1,0 +1,9 @@
+{
+  "geometry/delaunay.hpp": [
+    "Delaunay 三角形分割",
+    "通常の Delaunay 三角形分割を分割統治で構築。反時計回り三角形、重複のない無向辺、凸包境界と入力添字の対応を返す。",
+    "O(N log N) 時間・O(N) メモリ。固定精度入力の浮動小数点フィルターと、退化時の誤差成分展開を使用。",
+    "C++17、競技用テンプレート不要。sites は完全一致で重複除去し辞書順、三角形・辺の添字は sites を参照。同円周は決定的な分割を1つ選ぶ。全点一直線は隣接点の鎖。有限値・2進最近接丸めが必要。指数範囲が広すぎる入力は例外。GCC 以外で fast-math を使わないこと。",
+    "#include \"geometry/delaunay.hpp\"\nstd::vector<cp_geometry::Point> p{{0,0},{2,0},{0,2},{0,0}};\nauto dt = cp_geometry::delaunay_triangulation(p);\nfor (auto triangle : dt.triangles) {\n    auto a = dt.sites[triangle[0]];\n}\n// 元の点 j の site: dt.original_to_site[j]"
+  ]
+}

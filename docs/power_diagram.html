@@ -1,0 +1,36 @@
+<h2>定義</h2>
+<p><code>PowerSite{point,weight}</code> に対し、点 q の値を <code>|q-point|²-weight</code> とします。選択したサイトの値が他の全サイト以下になる領域が、そのサイトのセルです。全サイトの重みが等しければ通常の点 Voronoi 図と一致します。重みを大きくするとセルが広がり、負の重みも使用できます。</p>
+<p>ここで使うのは距離の<strong>二乗</strong>から重みを引いた値です。<code>|q-point|-radius</code> のような円周までの距離を比較する図ではありません。重み0以外では、サイト自身が自分のセルに入らない場合や、セルが空になる場合もあります。</p>
+<h2>API</h2>
+<table><thead><tr><th>関数</th><th>戻り値・計算量</th></tr></thead><tbody>
+<tr><td>power_value(site,q)</td><td>|q-site.point|²-site.weight。O(1)</td></tr>
+<tr><td>power_bisector(first,second)</td><td>first の値が second 以下になる HalfPlane。O(1)</td></tr>
+<tr><td>power_cell(sites,i,lower,upper)</td><td>矩形 [lower.x,upper.x]×[lower.y,upper.y] 内のセル。O(N log N)</td></tr>
+<tr><td>power_cell(sites,i)</td><td>矩形制限なしの HalfPlaneRegion。期待 O(N log N)、最悪 O(N²)</td></tr>
+<tr><td>power_diagram(sites,lower,upper)</td><td>入力と同じ順序で全セルを構成。O(N² log N)</td></tr>
+<tr><td>power_sites_from_circles(circles)</td><td>中心を point、半径の二乗を weight に変換。O(N)</td></tr>
+<tr><td>circle_territory_area(circles,i,lower,upper)</td><td>サイト i のセル内で、全ての入力円板の外側にある面積。O(N log N)</td></tr>
+</tbody></table>
+<p><code>#include "geometry/power_diagram.hpp"</code> だけで利用できます。型・関数は <code>cp_geometry</code> 名前空間です。サイトの座標・重みは有限値、矩形は有限値かつ各軸で lower&lt;upper が必要です。不正な値は <code>std::invalid_argument</code>、範囲外のサイト添字は <code>std::out_of_range</code> です。計算途中の平行移動・境界係数・power 値が数値範囲を超える場合は例外です。</p>
+<p>矩形内のセルは正の面積があれば反時計回りの頂点列を返します。頂点の始点は保証せず、冗長な境界頂点が残る場合があります。空集合・点・線分は空配列です。サイトが空のとき全セル構成は空配列を返します。全セルを個別に半平面交差する実装なので、O(N log N) の図全体の構築や隣接グラフの構築は行いません。1セルの追加メモリは O(N)、全セルの返却領域を保存するメモリ上界は O(N²) です。</p>
+<p>矩形なし版の <code>HalfPlaneRegion</code> は <code>EMPTY</code> / <code>UNBOUNDED</code> / <code>POLYGON</code> / <code>DEGENERATE</code> を区別します。空以外は <code>witness</code> に実行可能点を返し、<code>polygon</code> に頂点列があるのは正面積の有界領域だけです。有界な点・線分は witness のみ、非有界な直線・半直線は UNBOUNDED です。</p>
+<h2>同一位置のサイト</h2>
+<p>位置が完全に同じサイトの間では、重みが大きい側だけがセルを持ちます。重みも完全に一致する場合は、小さい入力添字のサイトがセルを所有し、他のセルを空にします。位置が異なるサイトでは閉半平面を使うため境界を共有しますが、共有部分の面積は0です。この規約により、同一サイトが入力に含まれても面積の二重計上を避けます。単体の <code>power_bisector</code> は入力添字を持たないため、同じ位置・同じ重みでは全平面を返します。</p>
+<h2>半平面への変換</h2>
+<p>サイト i と j の中心差を d=p_j-p_i とし、q=p_i+u と平行移動すると、値の比較は</p>
+<pre><code>2 d・u &lt;= |d|² + weight_i - weight_j</code></pre>
+<p>となります。異なる中心では |d| で正規化し、右辺を <code>|d|/2 + (weight_i/2-weight_j/2)/|d|</code> と計算します。大きな絶対座標の二乗同士の減算を避け、各セルの半平面交差も選択したサイトを原点にして実行します。最後に結果を元の座標へ戻します。<code>power_bisector</code> はこの不等式を元の座標で表した <code>a*x+b*y&lt;=c</code> を返します。同一中心なら {0,0,0} が全平面、{0,0,-1} が不可能な制約です。</p>
+<h2>円の担当領域と Galaxy War</h2>
+<pre><code>std::vector&lt;cp_geometry::Circle&gt; circles{
+    {{1,1},2}, {{4,5},2}, {{-2,0},1}, {{5,-7},3}
+};
+auto sites = cp_geometry::power_sites_from_circles(circles);
+auto cell = cp_geometry::power_cell(sites, 0, {-10000,-10000}, {10000,10000});
+auto territory = cp_geometry::circle_territory_area(
+    circles, 0, {-10000,-10000}, {10000,10000}); // 約31.96518940548</code></pre>
+<p>円の半径を r とすると、円の外の点から引いた接線の長さの二乗は <code>|q-center|²-r²</code> です。接線が最短の円を選ぶ問題では、この値の大小を Power Diagram のセルで比較できます。この変換は <a href="https://contest.ucup.ac/contest/4694/problem/23663">The 5th Universal Cup Stage 7: Wuhan H — Galaxy War</a>（2026-11-14）の入力に利用できます。問題文は<a href="https://contest.ucup.ac/download.php?id=4694&amp;r=0&amp;type=attachments">公式 PDF</a>の H にあります。</p>
+<p>セル i の点では power_i≤power_j が全 j について成り立ちます。その点が自分の円の外なら power_i≥0 なので、power_j≥0、つまり他の全ての円の外でもあります。したがって、担当領域の面積は<strong>セルの面積から、自分の円板とセルの共通面積だけを引けば</strong>求まります。他の円との共通面積を順に引く必要はありません。この導出と実装は本ライブラリ用に記述したもので、公式解説からのコード転用ではありません。</p>
+<h2>数値の前提・検証</h2>
+<p>計算は <code>long double</code> と半平面交差の許容誤差を使います。セルの中心を原点にすることで共通の大きな平行移動には強くしていますが、ほぼ平行な境界、大きく異なるスケール、ほぼ点や線分に潰れたセルでは誤差が増幅されます。非常に大きい座標では頂点を元の座標へ戻す際にも精度を失います。整数の厳密な組合せ構造や、任意のスケールに対する正確な面積を保証する API ではありません。</p>
+<p><code>verify/power_diagram.test.cpp</code> では、負の重み、同一・優劣サイト、空・点・線分・非有界セル、1e12 の共通平行移動、入力値の検証を行います。固定シード800組の全セルを、正規化しない係数による独立した逐次多角形切断と比較し、矩形の面積が全セルの面積和と一致すること、各頂点で担当サイトの値が最小になることを確認します。Galaxy War の4サンプルと、20組の円集合について全担当面積の和を独立した円板和の数値積分とも比較します。外部ジャッジへの提出結果を示すものではありません。</p>
+<p>Power Diagram の定義と性質の一次資料は Franz Aurenhammer, <a href="https://epubs.siam.org/doi/abs/10.1137/0216006">Power Diagrams: Properties, Algorithms and Applications</a>, SIAM Journal on Computing 16(1), 1987 です。本実装はこの図全体の高速構築を実装したものではなく、セルごとの線形不等式への展開と既存の半平面交差を組み合わせています。</p>

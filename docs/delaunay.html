@@ -1,0 +1,31 @@
+<h2>API と添字</h2>
+<p><code>delaunay_triangulation(points)</code> は通常のユークリッド距離に対する <code>DelaunayTriangulation</code> を返します。重み付き Delaunay 分割は対象外です。C++17 の標準ライブラリだけに依存し、競技用テンプレートは不要です。</p>
+<table><thead><tr><th>フィールド</th><th>内容</th></tr></thead><tbody>
+<tr><td>sites</td><td>座標 (x,y) の辞書順に並べた重複のない点。重複判定は座標の完全一致で、eps による丸めはしません。</td></tr>
+<tr><td>representative[i]</td><td>site i と同座標の入力のうち、最小の入力添字。</td></tr>
+<tr><td>original_to_site[j]</td><td>元の入力 j に対応する site の添字。</td></tr>
+<tr><td>triangles</td><td>sites の添字3個の配列。各三角形は反時計回りで、最小添字を先頭にした後、辞書順に並べます。</td></tr>
+<tr><td>edges</td><td>三角形分割の無向辺を (小さい添字,大きい添字) で重複なく辞書順に格納します。</td></tr>
+<tr><td>hull</td><td>凸包の境界上の site を反時計回りに並べます。辺の途中にある点も含みます。全点が一直線上なら、全 site を辞書順に並べます。</td></tr>
+</tbody></table>
+<pre><code>#include "geometry/delaunay.hpp"
+std::vector&lt;cp_geometry::Point&gt; p{{0,0},{2,0},{0,2},{0,0}};
+auto dt = cp_geometry::delaunay_triangulation(p);
+// dt.sites.size() == 3
+// dt.original_to_site[0] == dt.original_to_site[3]
+for (auto triangle : dt.triangles) {
+    auto a = dt.sites[triangle[0]];
+    auto b = dt.sites[triangle[1]];
+    auto c = dt.sites[triangle[2]];
+}</code></pre>
+<h2>退化と計算量</h2>
+<p>空集合・1点では辺も三角形もありません。2点では1辺です。全点が一直線上なら、隣り合う site を結ぶ鎖を返し、三角形は空です。4点以上が同じ円周上にある場合は、同距離の選択を固定して、決定的な三角形分割を1つ返します。同円周上の全ての点対を辺として返すものではありません。</p>
+<p>Guibas–Stolfi の分割統治法を使います。左右の三角形分割を下側共通接線から順に結合し、空円条件を満たさない候補辺を削除します。隣接関係は quad-edge で保持し、削除した格納領域を再利用します。点数 N に対して O(N log N) 時間、O(N) メモリです。最後の辺・三角形のソートもこの計算量に含みます。固定精度入力に対する述語の最大仕事量は定数ですが、退化した入力では高精度フォールバックの定数倍が増えます。</p>
+<h2>数値判定</h2>
+<p>トポロジー用の向き判定と円内判定は、幾何基礎の絶対 eps 判定を使いません。まず通常の浮動小数点計算と保守的な誤差評価を使い、符号が確定しない場合だけ、加算の誤差成分と <code>std::fma</code> による積の誤差成分を展開して計算します。対象は <code>Real</code> に格納された座標であり、文字列からの入力時に既に失われた桁は復元できません。</p>
+<p>入力は有限値でなければ例外です。内部で全座標を同じ2の累乗で拡大縮小し、座標の指数範囲が広すぎて次数4の正確な積がアンダーフローする恐れがある場合は <code>std::overflow_error</code> にします。座標そのものが非常に小さい・大きいことより、同じ入力に含まれる非ゼロ座標の大きさの比が問題になります。</p>
+<p>この展開計算は2進浮動小数点・最近接丸めを前提とします。丸めモードを変更して使用しないでください。GCC ではこのヘッダーの関数だけを <code>no-fast-math</code> で囲み、読み込み元の設定を復元します。GCC 以外では <code>fast-math</code> を使わないでください。検出できる <code>__FAST_MATH__</code> 指定時には例外で拒否します。精度を変更する未知のコンパイラー設定や flush-to-zero モードは検証対象外です。</p>
+<h2>検証・参照</h2>
+<p><code>verify/delaunay.test.cpp</code> で1600個の整数点集合を検証します。三角形ごとの全点に対する空円条件は独立した128ビット整数計算と比較し、辺の交差・頂点を飛び越す辺・面積の総和・Euler の辺数と三角形数・重複点の対応も確認します。格子、整数の同円周上の点、一直線、重複、ほぼ同円周、向きの行列式が正確に1となる大きな Fibonacci ベクトルも含みます。</p>
+<p>追加の速度確認はテストプログラムの <code>--benchmark</code> 引数で10万点を生成します。これはベンチマーク用で、通常の全点対検証には含めません。外部ジャッジでの AC は未確認です。</p>
+<p>アルゴリズムは <a href="https://people.eecs.berkeley.edu/~jrs/meshpapers/GuibasStolfi.pdf">Guibas–Stolfi: Primitives for the Manipulation of General Subdivisions and the Computation of Voronoi Diagrams (1985)</a>、誤差成分の展開による述語は <a href="https://www.cs.cmu.edu/~quake/robust.html">Shewchuk: Adaptive Precision Floating-Point Arithmetic and Fast Robust Predicates</a> を参照しました。既存実装をコピーせず、これらのアルゴリズムと算術恒等式から独立に実装しています。</p>

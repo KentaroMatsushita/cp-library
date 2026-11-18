@@ -1,8 +1,8 @@
 {
   "geometry/geometry.hpp": {
     "title": "平面幾何ライブラリ（まとめて include）",
-    "summary": "点・直線・凸多角形・半平面・円・最近点対・Minkowski 和の各ヘッダをまとめて読み込む。用途ごとの個別ヘッダだけを使うこともでき、共通テンプレートには依存しない。",
-    "complexity": "各モジュールによる。凸内外判定・直線交点 O(log N)、円と多角形の共通面積 O(N)、円と円の共通面積 O(1)、最近点対 O(N log N)。",
+    "summary": "点・直線・凸多角形・半平面・円・最近点対・Minkowski 和・Delaunay・Voronoi・Power Diagram をまとめて読み込む。用途別のヘッダだけを使うこともでき、共通テンプレートには依存しない。",
+    "complexity": "各モジュールによる。通常の Delaunay/Voronoi と矩形内の全セル O(N log N)、重み付き1セル O(N log N)、重み付き全セル O(N² log N)。",
     "contract": "C++17、cp_geometry 名前空間。判定結果は Location::outside/boundary/inside（旧 IN/ON/OUT 定数は廃止）。普段の my_template.hpp と読み込み順序の両方で併用テスト済み。INT/IN/OUT、min/max、all/rep 等の既存マクロを変更しない。各ヘッダは必要な標準ヘッダと依存ヘッダを自分で読み込む。任意の型名マクロや int の再定義への対応を保証するものではない。",
     "usage": "#include \"geometry/geometry.hpp\"\nnamespace cg=cp_geometry;\ncg::Circle a({0,0},1), b({1,0},1);\nauto lens=cg::circle_overlap_area(a,b);\nstd::vector<cg::Point> square{{0,0},{2,0},{2,2},{0,2}};\nauto clipped=cg::circle_polygon_intersection_area(a,square);",
     "detail": "geometry.html",

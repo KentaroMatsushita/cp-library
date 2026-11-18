@@ -1,0 +1,53 @@
+<h2>通常の Voronoi 図</h2>
+<p>各入力点に最も近い領域を返します。図全体は <code>VoronoiDiagram(sites)</code> で O(N log N) 時間、O(N) メモリで構築します。全点対の半平面交差を N 回行う実装ではなく、Delaunay 三角形分割の隣接関係を使います。各サイトは入力配列の添字で指定します。</p>
+<pre><code>#include "geometry/voronoi.hpp"
+namespace cg=cp_geometry;
+std::vector&lt;cg::Point&gt; sites{{-1,0},{1,0},{0,2}};
+cg::VoronoiDiagram diagram(sites);
+auto cells=diagram.cells({-5,-5},{5,5});
+auto cell=diagram.cell(0,{-5,-5},{5,5});
+auto area=cg::polygon_area(cell);
+</code></pre>
+<table><thead><tr><th>API</th><th>意味</th><th>計算量</th></tr></thead><tbody>
+<tr><td>sites()</td><td>元の入力配列への const 参照</td><td>O(1)</td></tr>
+<tr><td>triangulation()</td><td>重複除去した点・三角形・Delaunay 辺</td><td>O(1)</td></tr>
+<tr><td>site_owner(i)</td><td>同一座標の点で最小の入力添字</td><td>O(1)</td></tr>
+<tr><td>vertices()</td><td>有限頂点。各要素の point が座標、site が接する元サイト1つ</td><td>O(1)</td></tr>
+<tr><td>edges()</td><td>有限線分・半直線・直線の配列</td><td>O(1)</td></tr>
+<tr><td>cell(i,lower,upper)</td><td>サイト i のセルを明示した矩形に切断</td><td>隣接点 d 個に対して O(d log d)</td></tr>
+<tr><td>cells(lower,upper)</td><td>入力順の全セル。正面積の CCW 多角形</td><td>全体 O(N log N)</td></tr>
+</tbody></table>
+<p><code>voronoi_diagram(sites)</code>、<code>voronoi_cells(sites,lower,upper)</code>、<code>voronoi_cell(sites,i,lower,upper)</code> もあります。これらの自由関数は呼ぶたびに図を構築するので、繰り返しの問い合わせにはクラスを保持してください。</p>
+<h2>非有界な辺</h2>
+<p><code>VoronoiEdge</code> は <code>origin + direction * t</code> のパラメータ表示です。<code>first_site</code> と <code>second_site</code> は元の入力添字です。</p>
+<table><tr><th>kind</th><th>t の範囲</th></tr>
+<tr><td>VoronoiEdgeKind::segment</td><td>[0,1]</td></tr>
+<tr><td>VoronoiEdgeKind::ray</td><td>[0,+∞)</td></tr>
+<tr><td>VoronoiEdgeKind::line</td><td>(-∞,+∞)</td></tr></table>
+<p><code>edge.clip(lower,upper)</code> は矩形との共通部分を <code>optional&lt;pair&lt;Point,Point&gt;&gt;</code> で返します。非交差は nullopt、接点だけなら同じ点を2個返します。<code>edge.segment_intersections(a,b)</code> は線分との交点を a→b の順で返し、重なる場合は重複部分の端点を返します。</p>
+<p>共線点だけの入力では、隣り合う点の垂直二等分線を直線として返します。点が1個なら辺はなく、セルは全平面です。矩形に切ったときには矩形全体になります。0点の図は空です。</p>
+<h2>重複点・共円</h2>
+<p>同一座標の点は完全一致で判定し、小さい入力添字のみ正面積のセルを所有します。重複した非所有者の <code>cell()</code> は空です。重複点を含む全セルの面積を合計しても二重計上しません。所有者は <code>site_owner()</code>、Delaunay 側の対応は <code>original_to_site</code> と <code>representative</code> で確認できます。</p>
+<p>4点以上が同じ円上にある場合、Delaunay 三角形分割は対角線を選びます。その双対にできる同じ中心の頂点をまとめ、長さ0の辺を削除します。有限座標の計算と同一視には浮動小数点の誤差があり、非常に近い別頂点を eps=1e-12 でまとめる場合があります。セル生成には冗長な Delaunay 隣接制約が含まれる場合がありますが、領域は変わりません。</p>
+<h2>最大空円</h2>
+<pre><code>auto box_answer=cg::largest_empty_circle_in_box(diagram,{-5,-5},{5,5});
+std::vector&lt;cg::Point&gt; polygon{{0,0},{6,0},{6,2},{2,2},{2,6},{0,6}};
+auto polygon_answer=cg::largest_empty_circle_in_polygon(diagram,polygon);
+if(polygon_answer) {
+    auto center=polygon_answer->center;
+    auto radius_squared=polygon_answer->squared_radius;
+}</code></pre>
+<p>点集合を円の開内部に含まない最大半径の円を求めます。<strong>指定する矩形・多角形に制限されるのは中心だけです。</strong> 円板全体が領域内に入る「最大内接円」とは異なります。境界上の入力点は許します。入力サイトが0個なら半径の有限な上限がないため nullopt、単純多角形が3頂点未満でも nullopt を返します。</p>
+<p>矩形版は全セルの頂点を調べて O(N log N)。単純多角形版は、内部の Voronoi 頂点、Voronoi 辺と多角形辺の交点、多角形頂点を調べ、M 頂点の領域に対して O(NM + N log N) です。凹多角形・CW/CCW の両方に対応します。自己交差や穴のある多角形は対象外です。</p>
+<h2>精度と利用環境</h2>
+<p>Delaunay の向き・円内判定は専用の浮動小数点展開で符号を補いますが、Voronoi の中心・交点・セル切断は long double の近似構成です。ほぼ共線な点では中心が非常に遠くなり、誤差が増幅されます。有限座標と中間積が表現できること、点と矩形辺の長さが eps より十分大きいことを前提とします。共通の巨大な平行移動には各セルのローカル座標で対処します。全ての極端なスケールを厳密処理するAPIではありません。</p>
+<p>C++17、外部パッケージ不要。普段の <code>my_template.hpp</code> と併用でき、グローバルなマクロは追加しません。Delaunay の二進・最近接丸めの条件、GCC 以外の fast-math 制約は Delaunay の説明を参照してください。</p>
+<h2>関連問題と資料</h2>
+<ul>
+<li><a href="https://icpc.global/worldfinals/problems/2018-ICPC-World-Finals/icpc2018.pdf">ICPC World Finals 2018 G — Panda Preserve</a>：多角形の頂点をサイトとする最大空円。<a href="https://icpc.global/worldfinals/problems/2018-ICPC-World-Finals/finals2018solutions.pdf">解法スケッチ</a>の候補列挙に対応する機能です。</li>
+<li><a href="https://judge.yosupo.jp/problem/euclidean_mst">Library Checker — Euclidean MST</a>：Delaunay 辺から Kruskal 法でユークリッド最小全域木を構築できます。重複点は代表点と重み0の辺で結ぶ必要があります。</li>
+<li><a href="https://qoj.ac/blog/qingyu/blog/1189?lang=en">第2期 Universal Cup Finals G — Circular Parterre の解説</a>：円の和の境界頂点から作る Voronoi 図の候補点を利用します。このモジュールだけでは元問題の円弧境界生成・候補検査までは行いません。</li>
+<li><a href="https://doc.cgal.org/latest/Voronoi_diagram_2/index.html">CGAL Voronoi Diagram Adaptor</a>：三角形分割の双対と退化辺の扱いを参考にしました。コードは本ライブラリ用に実装しています。</li>
+</ul>
+<h2>検証</h2>
+<p>Delaunay は整数の空円・向き・辺の交差・Euler 個数を独立検証します。Voronoi セルは全点対の逐次多角形切断と比較し、全セルの面積和と各辺上での最近点条件を確認します。共線・共円・重複・領域外サイト・平行移動、小さな矩形、凹多角形と最大空円も検証します。Panda Preserve の公式サンプルも回帰に含めます。外部ジャッジでの AC を表示するものではありません。</p>
